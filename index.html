@@ -151,9 +151,9 @@ body::before {
 
 /* ─── MAIN CONTENT ─── */
 .content-area {
-  max-width: 960px;
+  max-width: 1020px;
   margin: 0 auto;
-  padding: 48px 48px;
+  padding: 48px 40px;
 }
 
 .section { display: none; }
@@ -241,7 +241,7 @@ body::before {
 
 .q-body {
   display: none;
-  padding: 0 24px 24px 68px;
+  padding: 4px 24px 28px 24px;
   border-top: 1px solid var(--bg3);
 }
 .q-card.open .q-body { display: block; }
@@ -267,56 +267,112 @@ body::before {
 }
 .answer-text p { margin-bottom: 10px; }
 .answer-text strong { color: var(--ink); font-weight: 700; }
-
-.code-block {
-  background: var(--ink);
-  color: #e8e0d8;
+.answer-text code, .key-points code, .trap-box code, .tip-box code {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
-  line-height: 1.7;
-  padding: 18px 20px;
-  border-radius: 4px;
-  margin: 14px 0;
-  overflow-x: auto;
-  position: relative;
+  background: var(--bg3);
+  color: var(--ink);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.08);
 }
-.code-block .kw { color: #7ec8e3; }
-.code-block .fn { color: #f4b860; }
-.code-block .cm { color: #6b6358; font-style: italic; }
-.code-block .str { color: #a8d8a8; }
-.code-block .num { color: #f4a261; }
 
+/* ─── CODE BLOCK ─── */
+.code-block {
+  background: #16120e;
+  color: #e8e0d8;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.8;
+  border-radius: 8px;
+  margin: 18px 0;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+/* Title bar */
+.code-block::before {
+  content: '● ● ●';
+  display: flex;
+  align-items: center;
+  background: #1a1510;
+  color: #3d3530;
+  font-size: 9px;
+  letter-spacing: 5px;
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  height: 32px;
+}
+.code-block-inner {
+  padding: 16px 20px 18px;
+  overflow-x: auto;
+  display: block;
+  white-space: pre;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #3d3530 transparent;
+}
+.code-block-inner::-webkit-scrollbar { height: 4px; }
+.code-block-inner::-webkit-scrollbar-track { background: transparent; }
+.code-block-inner::-webkit-scrollbar-thumb { background: #3d3530; border-radius: 2px; }
+
+/* Syntax tokens — inline within pre-formatted text */
+.code-block .kw   { color: #7ec8e3; font-weight: 600; }
+.code-block .fn   { color: #f4b860; }
+.code-block .cm   { color: #5a5248; font-style: italic; }
+.code-block .str  { color: #a8d8a8; }
+.code-block .num  { color: #f4a261; }
+.code-block .type { color: #c9a96e; }
+
+/* ─── KEY POINTS ─── */
 .key-points {
   background: var(--bg);
-  border-left: 3px solid var(--ink);
-  border-radius: 0 4px 4px 0;
-  padding: 14px 18px;
-  margin: 14px 0;
+  border: 1px solid var(--bg3);
+  border-left: 3px solid var(--ink3);
+  border-radius: 0 8px 8px 0;
+  padding: 0;
+  margin: 18px 0;
+  overflow: hidden;
 }
 .key-points ul {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
 }
 .key-points li {
   font-size: 13px;
   color: var(--ink2);
   display: flex;
   gap: 10px;
-  line-height: 1.5;
+  line-height: 1.6;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bg3);
+  border-right: 1px solid var(--bg3);
 }
+.key-points li:nth-child(even) { border-right: none; }
+.key-points li:nth-last-child(-n+2):nth-child(odd),
+.key-points li:nth-last-child(-n+2):nth-child(odd) ~ li { border-bottom: none; }
 .key-points li::before {
   content: '→';
   color: var(--ink4);
   flex-shrink: 0;
   font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  margin-top: 2px;
 }
+/* Full-width overrides */
+.key-points ul li:only-child { grid-column: 1 / -1; border-right: none; }
+.key-points ul li:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: none; }
 
+/* ─── BOXES ─── */
 .trap-box {
-  background: rgba(174,32,18,0.05);
-  border: 1px solid rgba(174,32,18,0.15);
-  border-radius: 4px;
+  background: rgba(174,32,18,0.04);
+  border: 1px solid rgba(174,32,18,0.18);
+  border-left: 3px solid var(--red);
+  border-radius: 0 6px 6px 0;
   padding: 14px 16px;
   margin: 14px 0;
 }
@@ -326,18 +382,21 @@ body::before {
   font-weight: 600;
   color: var(--red);
   letter-spacing: 1px;
-  margin-bottom: 6px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 .trap-box p {
   font-size: 13px;
   color: var(--ink2);
-  line-height: 1.5;
+  line-height: 1.6;
 }
+.trap-box strong { color: var(--red); }
 
 .tip-box {
   background: var(--green-bg);
   border: 1px solid rgba(45,106,79,0.2);
-  border-radius: 4px;
+  border-left: 3px solid var(--green);
+  border-radius: 0 6px 6px 0;
   padding: 14px 16px;
   margin: 14px 0;
 }
@@ -347,12 +406,56 @@ body::before {
   font-weight: 600;
   color: var(--green);
   letter-spacing: 1px;
-  margin-bottom: 6px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 .tip-box p {
   font-size: 13px;
   color: var(--ink2);
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+/* ─── RESPONSIVE ─── */
+
+/* Tablet */
+@media (max-width: 900px) {
+  .content-area { max-width: 100%; }
+  .key-points ul { grid-template-columns: 1fr 1fr; }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .masthead { padding: 28px 20px 24px; }
+  .masthead-sub { gap: 8px; }
+  .nav-tabs {
+    padding: 0 4px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { padding: 12px 12px; font-size: 10px; white-space: nowrap; letter-spacing: 0.8px; }
+  .content-area { padding: 20px 14px; }
+  .q-header { padding: 14px 14px; gap: 8px; }
+  .q-text { font-size: 14px; }
+  .q-level { display: none; }
+  .q-body { padding: 0 14px 18px 14px; }
+  /* Code: smaller font, keep scrollable */
+  .code-block { font-size: 11px; margin: 12px 0; }
+  .code-block-inner { padding: 12px 14px 14px; }
+  /* Key points: single column on mobile */
+  .key-points ul { grid-template-columns: 1fr; }
+  .key-points li { border-right: none !important; }
+  .key-points li:nth-last-child(-n+2):nth-child(odd),
+  .key-points li:nth-last-child(-n+2):nth-child(odd) ~ li { border-bottom: 1px solid var(--bg3); }
+  .key-points li:last-child { border-bottom: none !important; }
+  /* Boxes */
+  .trap-box, .tip-box { padding: 12px 14px; }
+  .ans-label { font-size: 8px; }
+  /* Section head */
+  .section-head { margin-bottom: 24px; }
+  .section-title { font-size: 22px; }
 }
 
 /* ─── CATEGORY LABEL ─── */
@@ -386,9 +489,24 @@ body::before {
 }
 .tab-btn.active.arch-tab { border-bottom-color: var(--arch); }
 .tab-btn.active.eng-tab { border-bottom-color: var(--eng); }
+.tab-btn.active.nest-tab { border-bottom-color: var(--nest); }
 .pill.arch { background: var(--arch); color: #fff; }
 .pill.eng { background: var(--eng); color: #fff; }
+.pill.nest { background: var(--nest); color: #fff; }
+:root { --nest: #e0234e; }
+.section-nest .q-card { border-top: 2px solid var(--nest); }
 </style>
+<script>
+function switchTab(tab, btn) {
+  document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('sec-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleCard(card) {
+  card.classList.toggle('open');
+}
+</script>
 </head>
 <body>
 
@@ -402,6 +520,7 @@ body::before {
     <span><span class="pill kafka">Message Broker</span></span>
     <span><span class="pill arch">Architecture & Security</span></span>
     <span><span class="pill eng">Engineering Process</span></span>
+    <span><span class="pill nest">NestJS / Node.js</span></span>
   </div>
 </div>
 
@@ -412,6 +531,7 @@ body::before {
   <button class="tab-btn kafka-tab" onclick="switchTab('kafka', this)">⇌ Message Broker</button>
   <button class="tab-btn arch-tab" onclick="switchTab('arch', this)">◈ Architecture & Security</button>
   <button class="tab-btn eng-tab" onclick="switchTab('eng', this)">✦ Engineering Process</button>
+  <button class="tab-btn nest-tab" onclick="switchTab('nest', this)">⬡ NestJS / Node.js</button>
 </div>
 
 <div class="content-area">
@@ -441,7 +561,7 @@ body::before {
         <p><strong>Inheritance (kế thừa)</strong> là cơ chế trong OOP cho phép class con (subclass) tự động nhận tất cả properties và methods của class cha (superclass). Mục đích: tái sử dụng code, tạo quan hệ "is-a".</p>
         <p><strong>Go KHÔNG có inheritance</strong>. Thay vào đó Go dùng <strong>Composition (Embedding)</strong> — quan hệ "has-a" thay vì "is-a". Đây là triết lý thiết kế cố ý của Go: <em>"Favor composition over inheritance"</em>.</p>
       </div>
-      <div class="code-block"><span class="cm">// Go: Composition thay vì Inheritance</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Go: Composition thay vì Inheritance</span>
 <span class="kw">type</span> Animal <span class="kw">struct</span> {
     Name <span class="kw">string</span>
 }
@@ -457,7 +577,7 @@ d.<span class="fn">Speak</span>() <span class="cm">// "Rex speaks" — gọi đ�
 d.Name    <span class="cm">// promoted field</span>
 
 <span class="cm">// Dog KHÔNG phải Animal (no "is-a")</span>
-<span class="cm">// Nhưng Dog có behavior của Animal (has-a via embedding)</span></div>
+<span class="cm">// Nhưng Dog có behavior của Animal (has-a via embedding)</span></div></div>
       <div class="key-points"><ul>
         <li><strong>Java có đa kế thừa không?</strong> — Java <strong>KHÔNG cho phép đa kế thừa class</strong> (Diamond Problem). Một class chỉ extends được 1 class.</li>
         <li><strong>Diamond Problem</strong>: nếu A extends B và C, cả B và C đều có method <code>foo()</code>, thì A gọi <code>foo()</code> của ai? Ambiguous → Java cấm.</li>
@@ -489,7 +609,7 @@ d.Name    <span class="cm">// promoted field</span>
       <div class="answer-text">
         <p>Với dự án nhỏ hoặc MVP, mình dùng <strong>MVC</strong> — nhanh, dễ onboard, ít boilerplate.</p>
       </div>
-      <div class="code-block"><span class="cm">// MVC structure — đơn giản, phù hợp team nhỏ / CRUD app</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// MVC structure — đơn giản, phù hợp team nhỏ / CRUD app</span>
 cmd/main.go
 internal/
   model/          <span class="cm">// struct + DB mapping (GORM models)</span>
@@ -501,13 +621,13 @@ internal/
   repository/     <span class="cm">// DB queries</span>
     user_repo.go
 router/
-  routes.go       <span class="cm">// Gin/Fiber route registration</span></div>
+  routes.go       <span class="cm">// Gin/Fiber route registration</span></div></div>
 
       <div class="ans-label">2 — Clean Architecture + DDD: Khi domain phức tạp</div>
       <div class="answer-text">
         <p>Khi business logic phức tạp hơn, cần test tốt hơn, mình chuyển sang <strong>Clean Architecture kết hợp DDD concepts</strong>. Dependency rule: phụ thuộc chỉ đi từ ngoài vào trong.</p>
       </div>
-      <div class="code-block"><span class="cm">// Clean Architecture — dependency rule: outer → inner only</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Clean Architecture — dependency rule: outer → inner only</span>
 internal/
   domain/                    <span class="cm">// ← CORE: zero external dependencies</span>
     entity/
@@ -543,13 +663,13 @@ pkg/
 <span class="cm">// Value Object: Email{value} — immutable, defined by value</span>
 <span class="cm">// Aggregate: Order chứa OrderItems — consistency boundary</span>
 <span class="cm">// Repository: interface để persist/retrieve aggregates</span>
-<span class="cm">// Usecase = Application Service: orchestrate domain objects</span></div>
+<span class="cm">// Usecase = Application Service: orchestrate domain objects</span></div></div>
 
       <div class="ans-label">3 — Microservices: Khi scale team và độc lập deployment</div>
       <div class="answer-text">
         <p>Khi team lớn hơn và cần deploy độc lập từng service, mình áp dụng <strong>Microservices</strong>. Mỗi service là một Go binary riêng với DB riêng (Database per Service pattern).</p>
       </div>
-      <div class="code-block"><span class="cm">// Microservices layout thực tế</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Microservices layout thực tế</span>
 services/
   user-service/             <span class="cm">// owns: PostgreSQL users table</span>
     cmd/main.go
@@ -569,7 +689,7 @@ shared/
 <span class="cm">// Communication patterns:</span>
 <span class="cm">// Sync:  gRPC (internal service-to-service)</span>
 <span class="cm">// Async: Kafka / RabbitMQ (event-driven)</span>
-<span class="cm">// External: REST API qua API Gateway</span></div>
+<span class="cm">// External: REST API qua API Gateway</span></div></div>
 
       <div class="key-points"><ul>
         <li><strong>MVC</strong>: dùng khi team nhỏ, CRUD app, cần ship nhanh. Ít abstraction, dễ đọc với junior.</li>
@@ -626,11 +746,11 @@ shared/
         <p><strong>Unbuffered</strong>: sender block cho đến khi receiver sẵn sàng nhận — đồng bộ hoàn toàn (rendezvous).</p>
         <p><strong>Buffered</strong>: sender chỉ block khi buffer đầy — có thể gửi trước khi receiver nhận.</p>
       </div>
-      <div class="code-block"><span class="cm">// Unbuffered — sync</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Unbuffered — sync</span>
 ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">int</span>)        <span class="cm">// block until recv</span>
 
 <span class="cm">// Buffered — async up to capacity</span>
-ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">int</span>, <span class="num">10</span>)    <span class="cm">// block only when full</span></div>
+ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">int</span>, <span class="num">10</span>)    <span class="cm">// block only when full</span></div></div>
       <div class="key-points"><ul>
         <li><strong>Unbuffered</strong>: dùng khi cần guarantee "message đã được nhận" trước khi tiếp tục. Ví dụ: signal done, handshake.</li>
         <li><strong>Buffered</strong>: dùng khi producer nhanh hơn consumer, muốn giảm blocking. Ví dụ: job queue, event pipeline.</li>
@@ -660,7 +780,7 @@ ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw"
         <li><strong>Mutex</strong>: Lock exclusive — chỉ 1 goroutine vào critical section tại một thời điểm (đọc hoặc ghi).</li>
         <li><strong>RWMutex</strong>: Nhiều goroutines có thể <strong>RLock</strong> (read) đồng thời, nhưng <strong>Lock</strong> (write) thì exclusive. Tốt khi read nhiều, write ít.</li>
       </ul></div>
-      <div class="code-block"><span class="kw">var</span> mu sync.RWMutex
+      <div class="code-block"><div class="code-block-inner"><span class="kw">var</span> mu sync.RWMutex
 <span class="kw">var</span> cache = <span class="fn">make</span>(<span class="kw">map</span>[<span class="kw">string</span>]<span class="kw">string</span>)
 
 <span class="cm">// Nhiều goroutine read cùng lúc OK</span>
@@ -673,7 +793,7 @@ ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw"
 <span class="kw">func</span> <span class="fn">Set</span>(key, val <span class="kw">string</span>) {
     mu.<span class="fn">Lock</span>(); <span class="kw">defer</span> mu.<span class="fn">Unlock</span>()
     cache[key] = val
-}</div>
+}</div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Bonus</div>
         <p>Mention <strong>go run -race</strong> để detect race condition. Interviewer sẽ rất ấn tượng nếu bạn biết tool này.</p>
@@ -694,7 +814,7 @@ ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw"
       <div class="answer-text">
         <p>Context dùng để <strong>truyền signal hủy, timeout, và metadata</strong> qua call chain. Đặc biệt quan trọng trong concurrent code và HTTP handlers.</p>
       </div>
-      <div class="code-block"><span class="cm">// WithCancel — manually cancel</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// WithCancel — manually cancel</span>
 ctx, cancel := context.<span class="fn">WithCancel</span>(context.<span class="fn">Background</span>())
 <span class="kw">defer</span> <span class="fn">cancel</span>() <span class="cm">// luôn defer cancel để tránh leak</span>
 
@@ -710,7 +830,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
     <span class="kw">return</span> ctx.<span class="fn">Err</span>() <span class="cm">// context.Canceled hoặc DeadlineExceeded</span>
 <span class="kw">case</span> result := &lt;-doWork():
     <span class="kw">return</span> result
-}</div>
+}</div></div>
       <div class="trap-box">
         <div class="trap-box-title">⚠ Bẫy hay gặp</div>
         <p>Quên <code>defer cancel()</code> → <strong>goroutine leak</strong>. Context không thể cancel parent — chỉ cancel down the tree. Không store context trong struct, luôn pass qua function parameter.</p>
@@ -734,7 +854,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
         <p><strong>Stack</strong>: nhanh, tự động deallocate khi function return. <strong>Heap</strong>: chậm hơn, cần GC dọn dẹp.</p>
         <p><strong>Escape Analysis</strong>: compiler phân tích xem variable có "thoát" ra ngoài function scope không. Nếu có → allocate heap. Nếu không → stack.</p>
       </div>
-      <div class="code-block"><span class="cm">// Stack — không escape</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Stack — không escape</span>
 <span class="kw">func</span> <span class="fn">foo</span>() <span class="kw">int</span> {
     x := <span class="num">42</span>    <span class="cm">// x trên stack, mất khi foo() return</span>
     <span class="kw">return</span> x
@@ -747,7 +867,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
 }
 
 <span class="cm">// Xem escape analysis:</span>
-<span class="cm">// go build -gcflags="-m" .</span></div>
+<span class="cm">// go build -gcflags="-m" .</span></div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Điểm cộng</div>
         <p>Interface{} thường gây escape to heap vì compiler không biết type lúc compile. Dùng <strong>sync.Pool</strong> để tái sử dụng objects, giảm GC pressure.</p>
@@ -768,7 +888,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
       <div class="answer-text">
         <p>Go dùng <strong>implicit interface implementation</strong> — không cần khai báo <code>implements</code>. Nếu type có đủ methods của interface → tự động implement. Đây là Duck Typing: <em>"nếu nó đi như vịt và kêu như vịt, thì nó là vịt."</em></p>
       </div>
-      <div class="code-block"><span class="kw">type</span> Writer <span class="kw">interface</span> {
+      <div class="code-block"><div class="code-block-inner"><span class="kw">type</span> Writer <span class="kw">interface</span> {
     <span class="fn">Write</span>(p []<span class="kw">byte</span>) (n <span class="kw">int</span>, err <span class="kw">error</span>)
 }
 
@@ -778,7 +898,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
 <span class="kw">func</span> (f FileWriter) <span class="fn">Write</span>(p []<span class="kw">byte</span>) (<span class="kw">int</span>, <span class="kw">error</span>) {
     <span class="cm">// ...</span>
     <span class="kw">return</span> <span class="fn">len</span>(p), <span class="kw">nil</span>
-}</div>
+}</div></div>
       <div class="key-points"><ul>
         <li>Interface value = (type, value) pair — nil interface khác nil pointer trong interface.</li>
         <li>Empty interface <code>interface{}</code> / <code>any</code> accept mọi type.</li>
@@ -802,7 +922,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
       <div class="answer-text">
         <p>Go không có try/catch. Error là value, return cùng với result. Pattern chuẩn: <strong>handle error ngay, không ignore.</strong></p>
       </div>
-      <div class="code-block"><span class="kw">import</span> <span class="str">"fmt"</span>
+      <div class="code-block"><div class="code-block-inner"><span class="kw">import</span> <span class="str">"fmt"</span>
 
 <span class="cm">// Wrap để thêm context</span>
 <span class="kw">func</span> <span class="fn">getUser</span>(id <span class="kw">int</span>) (*User, <span class="kw">error</span>) {
@@ -820,7 +940,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
 <span class="kw">var</span> pgErr *pgconn.PgError
 <span class="kw">if</span> errors.<span class="fn">As</span>(err, &amp;pgErr) {
     fmt.<span class="fn">Println</span>(pgErr.Code) <span class="cm">// postgres error code</span>
-}</div>
+}</div></div>
       <div class="key-points"><ul>
         <li><code>errors.Is</code>: so sánh theo giá trị, traverse error chain qua <code>Unwrap()</code>.</li>
         <li><code>errors.As</code>: check type trong chain, extract để access fields.</li>
@@ -842,7 +962,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
       <div class="answer-text">
         <p>Spawn goroutine không giới hạn → OOM khi load cao. Worker pool giới hạn concurrency, tái sử dụng goroutines.</p>
       </div>
-      <div class="code-block"><span class="kw">func</span> <span class="fn">workerPool</span>(jobs &lt;-<span class="kw">chan</span> Job, numWorkers <span class="kw">int</span>) {
+      <div class="code-block"><div class="code-block-inner"><span class="kw">func</span> <span class="fn">workerPool</span>(jobs &lt;-<span class="kw">chan</span> Job, numWorkers <span class="kw">int</span>) {
     <span class="kw">var</span> wg sync.WaitGroup
     
     <span class="kw">for</span> i := <span class="num">0</span>; i &lt; numWorkers; i++ {
@@ -862,7 +982,7 @@ ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class=
 jobs := <span class="fn">make</span>(<span class="kw">chan</span> Job, <span class="num">100</span>)
 <span class="kw">go</span> <span class="fn">workerPool</span>(jobs, <span class="num">10</span>) <span class="cm">// chỉ 10 goroutines</span>
 <span class="kw">for</span> _, j := <span class="kw">range</span> allJobs { jobs &lt;- j }
-<span class="fn">close</span>(jobs) <span class="cm">// signal workers to stop</span></div>
+<span class="fn">close</span>(jobs) <span class="cm">// signal workers to stop</span></div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Real-world usage</div>
         <p>Dùng semaphore pattern với buffered channel: <code>sem := make(chan struct{}, 10)</code>. Acquire: <code>sem &lt;- struct{}{}</code>. Release: <code>&lt;-sem</code>. Hoặc dùng <strong>golang.org/x/sync/semaphore</strong>.</p>
@@ -919,10 +1039,10 @@ jobs := <span class="fn">make</span>(<span class="kw">chan</span> Job, <span cla
       <div class="answer-text">
         <p><code>EXPLAIN ANALYZE</code> thực thi query và trả về execution plan với actual time. Đây là công cụ quan trọng nhất để optimize query.</p>
       </div>
-      <div class="code-block">EXPLAIN ANALYZE
+      <div class="code-block"><div class="code-block-inner">EXPLAIN ANALYZE
 SELECT * FROM watch_sessions
 WHERE user_id = <span class="str">'user_123'</span>
-AND started_at > NOW() - INTERVAL <span class="str">'30 days'</span>;
+AND started_at &gt; NOW() - INTERVAL <span class="str">'30 days'</span>;
 
 <span class="cm">-- Output đọc từ trong ra ngoài (indented = inner first)</span>
 <span class="cm">-- Seq Scan: đọc toàn bộ bảng → BAD nếu bảng lớn</span>
@@ -931,7 +1051,7 @@ AND started_at > NOW() - INTERVAL <span class="str">'30 days'</span>;
 <span class="cm">-- Bitmap Heap Scan: kết hợp nhiều index conditions</span>
 
 <span class="cm">-- Chú ý: actual time=X..Y rows=Z loops=N</span>
-<span class="cm">-- cost=X..Y: estimated, actual time: thực tế</span></div>
+<span class="cm">-- cost=X..Y: estimated, actual time: thực tế</span></div></div>
       <div class="key-points"><ul>
         <li>Tìm node có <strong>actual time cao nhất</strong> — đó là bottleneck.</li>
         <li><strong>rows estimated vs actual</strong> lệch nhiều → cần <code>ANALYZE</code> để update statistics.</li>
@@ -960,7 +1080,7 @@ AND started_at > NOW() - INTERVAL <span class="str">'30 days'</span>;
         <li><strong>Repeatable Read</strong>: snapshot consistent, nhưng có thể thấy rows mới được insert → <em>Phantom Read</em>.</li>
         <li><strong>Serializable</strong>: hoàn toàn isolated, như chạy serial. Chậm nhất nhưng safe nhất.</li>
       </ul></div>
-      <div class="code-block"><span class="cm">-- PostgreSQL default: Read Committed</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">-- PostgreSQL default: Read Committed</span>
 BEGIN;
 SELECT balance FROM accounts WHERE id = 1;  <span class="cm">-- 100</span>
 <span class="cm">-- tx khác UPDATE và COMMIT ở đây</span>
@@ -969,7 +1089,7 @@ COMMIT;
 
 <span class="cm">-- Fix: dùng Repeatable Read</span>
 BEGIN ISOLATION LEVEL REPEATABLE READ;
-<span class="cm">-- Bây giờ cả 2 SELECT đều trả về 100</span></div>
+<span class="cm">-- Bây giờ cả 2 SELECT đều trả về 100</span></div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Thực tế</div>
         <p>PostgreSQL implement Repeatable Read bằng MVCC — không có Phantom Read. Serializable dùng SSI (Serializable Snapshot Isolation) — hiệu năng tốt hơn lock-based.</p>
@@ -989,12 +1109,12 @@ BEGIN ISOLATION LEVEL REPEATABLE READ;
       <div class="answer-text">
         <p>Deadlock xảy ra khi tx A giữ lock mà B cần, B giữ lock mà A cần → cả hai chờ nhau mãi mãi.</p>
       </div>
-      <div class="code-block"><span class="cm">-- Tx A                    -- Tx B</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">-- Tx A                    -- Tx B</span>
 BEGIN;                    BEGIN;
 UPDATE accounts           UPDATE accounts
   WHERE id = 1;  <span class="cm">-- lock 1</span>   WHERE id = 2; <span class="cm">-- lock 2</span>
 UPDATE accounts           UPDATE accounts
-  WHERE id = 2;  <span class="cm">-- wait!</span>   WHERE id = 1; <span class="cm">-- wait! DEADLOCK</span></div>
+  WHERE id = 2;  <span class="cm">-- wait!</span>   WHERE id = 1; <span class="cm">-- wait! DEADLOCK</span></div></div>
       <div class="key-points"><ul>
         <li><strong>Prevention</strong>: luôn lock resources theo thứ tự cố định (id tăng dần). Ví dụ: luôn UPDATE id nhỏ hơn trước.</li>
         <li><strong>Detection</strong>: PostgreSQL tự detect và kill tx có cost thấp hơn → trả về error <code>40P01</code>.</li>
@@ -1046,7 +1166,7 @@ UPDATE accounts           UPDATE accounts
       <div class="answer-text">
         <p>N+1 xảy ra khi bạn query 1 lần để lấy N records, rồi query thêm N lần cho từng record. Tổng = N+1 queries.</p>
       </div>
-      <div class="code-block"><span class="cm">// BAD — N+1: 1 query lấy users + N query lấy orders</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// BAD — N+1: 1 query lấy users + N query lấy orders</span>
 users, _ := db.Query(<span class="str">"SELECT * FROM users"</span>)  <span class="cm">// 1</span>
 <span class="kw">for</span> _, u := <span class="kw">range</span> users {
     orders, _ := db.Query(                          <span class="cm">// N lần!</span>
@@ -1060,7 +1180,7 @@ db.Query(<span class="str">`
 `</span>)
 
 <span class="cm">// Hoặc: lấy tất cả user IDs trước, rồi IN query</span>
-db.Query(<span class="str">"SELECT * FROM orders WHERE user_id IN (?)"</span>, userIDs...)</div>
+db.Query(<span class="str">"SELECT * FROM orders WHERE user_id IN (?)"</span>, userIDs...)</div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Trong ORM</div>
         <p>GORM dùng <code>Preload</code> hoặc <code>Joins</code> để avoid N+1. Sqlboiler, sqlx cần tự viết. Luôn check SQL log khi dùng ORM để phát hiện N+1.</p>
@@ -1087,14 +1207,14 @@ db.Query(<span class="str">"SELECT * FROM orders WHERE user_id IN (?)"</span>, u
         <li><strong>2NF</strong>: Đạt 1NF + mọi non-key column phụ thuộc vào <em>toàn bộ</em> primary key (không phải một phần). Chỉ áp dụng khi PK là composite key.</li>
         <li><strong>3NF</strong>: Đạt 2NF + không có transitive dependency — column không được phụ thuộc vào non-key column khác.</li>
       </ul></div>
-      <div class="code-block"><span class="cm">-- Vi phạm 3NF: customer_city phụ thuộc customer_id, không phải order_id</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">-- Vi phạm 3NF: customer_city phụ thuộc customer_id, không phải order_id</span>
 orders(order_id, customer_id, customer_name, customer_city)
 
 <span class="cm">-- Sau normalize 3NF: tách thành 2 bảng</span>
 customers(customer_id PK, customer_name, customer_city)
 orders(order_id PK, customer_id FK, amount, created_at)
 <span class="cm">-- Sửa city của customer → chỉ update 1 row trong customers</span>
-<span class="cm">-- Không còn data redundancy hay inconsistency</span></div>
+<span class="cm">-- Không còn data redundancy hay inconsistency</span></div></div>
       <div class="ans-label">Khi nào nên Denormalize?</div>
       <div class="answer-text">
         <p>Denormalize khi <strong>read performance quan trọng hơn write consistency</strong> — chấp nhận data redundancy để tránh JOIN phức tạp.</p>
@@ -1124,7 +1244,7 @@ orders(order_id PK, customer_id FK, amount, created_at)
         <p>Có. Mình không dùng một loại DB cho tất cả — mỗi loại DB có <strong>strength riêng, phù hợp với access pattern khác nhau</strong>. Quyết định "dùng DB nào" quan trọng không kém thiết kế schema.</p>
       </div>
       <div class="ans-label">Decision Framework — khi nào dùng gì</div>
-      <div class="code-block"><span class="cm">// PostgreSQL — transactional, relational, ACID critical</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// PostgreSQL — transactional, relational, ACID critical</span>
 <span class="cm">// Dùng khi: user data, orders, payments, anything cần FK + constraint</span>
 users(user_id PK, email UNIQUE, created_at, engagement_score)
 videos(video_id PK, creator_id FK, category, tags GIN_INDEX)
@@ -1155,7 +1275,7 @@ playback_events ENGINE = MergeTree()
   "captions": [{ "lang": "vi", "url": "..." }],   <span class="cm">// nested, vary per doc</span>
   "custom_fields": { "platform": "tiktok" } }      <span class="cm">// flexible schema</span>
 <span class="cm">// Strength: flexible schema, horizontal scale (sharding built-in)</span>
-<span class="cm">// Weakness: no JOIN across collections, no multi-doc ACID (trước v4.0)</span></div>
+<span class="cm">// Weakness: no JOIN across collections, no multi-doc ACID (trước v4.0)</span></div></div>
 
       <div class="ans-label">Quy trình thiết kế schema thực tế</div>
       <div class="key-points"><ul>
@@ -1203,10 +1323,10 @@ playback_events ENGINE = MergeTree()
         <li><strong>Consumer Group</strong>: mỗi partition được assign cho đúng 1 consumer trong group. Cho phép scale horizontally. 2 groups đọc cùng topic = 2 lần (broadcast).</li>
         <li><strong>Offset</strong>: position của consumer trong partition. Consumer tự quản lý offset → có thể re-read.</li>
       </ul></div>
-      <div class="code-block"><span class="cm">// Rule: consumers trong group ≤ số partitions</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Rule: consumers trong group ≤ số partitions</span>
 <span class="cm">// 10 partitions + 5 consumers = mỗi consumer 2 partitions</span>
 <span class="cm">// 10 partitions + 10 consumers = mỗi consumer 1 partition  ← optimal</span>
-<span class="cm">// 10 partitions + 15 consumers = 5 consumers idle ← lãng phí</span></div>
+<span class="cm">// 10 partitions + 15 consumers = 5 consumers idle ← lãng phí</span></div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Partition key</div>
         <p>Messages cùng key → cùng partition → ordered. Ví dụ: key=user_id → mọi event của user đó theo thứ tự. Nếu không set key → round-robin distribution.</p>
@@ -1307,14 +1427,14 @@ playback_events ENGINE = MergeTree()
         <li><strong>acks=1</strong>: leader ghi xong là ACK. Nếu leader crash trước khi replicate → mất data.</li>
         <li><strong>acks=all (-1)</strong>: đợi tất cả ISR (In-Sync Replicas) ghi xong. Chậm nhất nhưng không mất data. Dùng kèm <code>min.insync.replicas=2</code>.</li>
       </ul></div>
-      <div class="code-block"><span class="cm">// Producer config cho durability cao</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Producer config cho durability cao</span>
 producer := kafka.NewWriter(kafka.WriterConfig{
     Brokers:      []string{<span class="str">"kafka:9092"</span>},
     Topic:        <span class="str">"video-events"</span>,
     RequiredAcks: kafka.RequireAll,    <span class="cm">// acks=all</span>
     Async:        <span class="kw">false</span>,              <span class="cm">// synchronous</span>
     MaxAttempts:  <span class="num">3</span>,                 <span class="cm">// retry</span>
-})</div>
+})</div></div>
       <div class="trap-box">
         <div class="trap-box-title">⚠ Idempotent Producer</div>
         <p>Retry có thể gây duplicate messages. Enable <code>enable.idempotence=true</code> → Kafka assign sequence number cho mỗi message, broker dedup tự động. Bắt buộc nếu dùng acks=all + retry.</p>
@@ -1334,7 +1454,7 @@ producer := kafka.NewWriter(kafka.WriterConfig{
       <div class="answer-text">
         <p>Vấn đề: bạn cần vừa ghi DB vừa publish Kafka trong cùng 1 operation. Nếu DB thành công nhưng Kafka fail → inconsistency.</p>
       </div>
-      <div class="code-block"><span class="cm">// BAD — không atomic</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// BAD — không atomic</span>
 <span class="kw">func</span> <span class="fn">createOrder</span>(order Order) <span class="kw">error</span> {
     db.<span class="fn">Insert</span>(order)               <span class="cm">// OK</span>
     kafka.<span class="fn">Publish</span>(<span class="str">"order.created"</span>) <span class="cm">// FAIL → inconsistent!</span>
@@ -1350,7 +1470,7 @@ tx.<span class="fn">Commit</span>()
 <span class="cm">// Nếu publish fail → retry (outbox row vẫn còn)</span>
 <span class="cm">// Nếu publish thành công → delete hoặc mark processed</span>
 
-<span class="cm">// CDC: dùng Debezium watch binlog → auto publish Kafka</span></div>
+<span class="cm">// CDC: dùng Debezium watch binlog → auto publish Kafka</span></div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Triển khai thực tế</div>
         <p><strong>Polling publisher</strong>: cronjob đọc outbox table mỗi vài giây. Đơn giản nhưng có latency.<br><strong>CDC (Change Data Capture)</strong>: Debezium đọc PostgreSQL WAL → publish Kafka. Real-time, không polling, nhưng cần setup thêm.</p>
@@ -1371,7 +1491,7 @@ tx.<span class="fn">Commit</span>()
       <div class="answer-text">
         <p>RabbitMQ là <strong>message broker</strong> implement giao thức AMQP. Hoạt động theo mô hình <strong>Producer → Exchange → Queue → Consumer</strong>. Exchange là điểm routing — quyết định message đi vào queue nào dựa trên routing rules.</p>
       </div>
-      <div class="code-block"><span class="cm">// 4 loại Exchange:</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// 4 loại Exchange:</span>
 <span class="cm">// Direct:  route theo exact routing key</span>
 <span class="cm">// Fanout:  broadcast đến tất cả queues (ignore key)</span>
 <span class="cm">// Topic:   route theo pattern (*.error, logs.#)</span>
@@ -1387,7 +1507,7 @@ msg, _ := ch.<span class="fn">Consume</span>(queue, <span class="str">""</span>,
     } <span class="kw">else</span> {
         d.<span class="fn">Ack</span>(<span class="kw">false</span>)         <span class="cm">// acknowledge: xóa khỏi queue</span>
     }
-}</div>
+}</div></div>
       <div class="key-points"><ul>
         <li><strong>ACK (Acknowledge)</strong>: consumer báo đã xử lý thành công → RabbitMQ xóa message.</li>
         <li><strong>NACK / Reject</strong>: xử lý thất bại → có thể requeue hoặc gửi vào Dead Letter Exchange (DLX).</li>
@@ -1461,7 +1581,7 @@ msg, _ := ch.<span class="fn">Consume</span>(queue, <span class="str">""</span>,
         <li><strong>Sensitive data</strong>: không log password, token, PII. Mask trong response. Encrypt at rest (password bcrypt, sensitive fields AES).</li>
         <li><strong>Security headers</strong>: <code>X-Content-Type-Options</code>, <code>X-Frame-Options</code>, <code>Strict-Transport-Security</code>.</li>
       </ul></div>
-      <div class="code-block"><span class="cm">// Go middleware stack thực tế</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Go middleware stack thực tế</span>
 router.<span class="fn">Use</span>(
     middleware.<span class="fn">RateLimit</span>(<span class="num">100</span>, time.Minute),   <span class="cm">// 100 req/min</span>
     middleware.<span class="fn">CORS</span>(allowedOrigins),
@@ -1469,7 +1589,7 @@ router.<span class="fn">Use</span>(
     middleware.<span class="fn">Authenticate</span>(jwtSecret),    <span class="cm">// verify JWT</span>
     middleware.<span class="fn">Authorize</span>(requiredRoles...),  <span class="cm">// check permission</span>
     middleware.<span class="fn">RequestLogger</span>(),             <span class="cm">// log (mask sensitive)</span>
-)</div>
+)</div></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Điểm cộng — OWASP Top 10</div>
         <p>Mention <strong>OWASP API Security Top 10</strong>: Broken Object Level Authorization (BOLA) là lỗi phổ biến nhất — user A có thể access data của user B bằng cách thay đổi ID trong request. Fix: luôn validate <code>resource.user_id == currentUser.id</code>.</p>
@@ -1489,7 +1609,7 @@ router.<span class="fn">Use</span>(
       <div class="answer-text">
         <p>JWT (JSON Web Token) là <strong>stateless token</strong> gồm 3 phần: <code>Header.Payload.Signature</code>, encode bằng Base64URL và ký bằng secret key (HMAC) hoặc private key (RSA/ES256).</p>
       </div>
-      <div class="code-block"><span class="cm">// Structure: base64(header).base64(payload).signature</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Structure: base64(header).base64(payload).signature</span>
 <span class="cm">// Header: {"alg":"HS256","typ":"JWT"}</span>
 <span class="cm">// Payload: {"sub":"user_123","role":"admin","exp":1706745600}</span>
 <span class="cm">// Signature: HMACSHA256(header+"."+payload, secret)</span>
@@ -1503,7 +1623,7 @@ claims := jwt.MapClaims{
     <span class="str">"exp"</span>: time.<span class="fn">Now</span>().<span class="fn">Add</span>(<span class="num">15</span> * time.Minute).<span class="fn">Unix</span>(), <span class="cm">// access: 15m</span>
 }
 token := jwt.<span class="fn">NewWithClaims</span>(jwt.SigningMethodHS256, claims)
-signed, _ := token.<span class="fn">SignedString</span>([]<span class="kw">byte</span>(secret))</div>
+signed, _ := token.<span class="fn">SignedString</span>([]<span class="kw">byte</span>(secret))</div></div>
       <div class="key-points"><ul>
         <li><strong>Access token ngắn (15 phút)</strong>: vì JWT <strong>không thể revoke</strong> trước khi hết hạn (stateless). Nếu bị steal, attacker chỉ dùng được tối đa 15 phút.</li>
         <li><strong>Refresh token dài (7-30 ngày)</strong>: lưu trong DB (có thể revoke bất cứ lúc nào). Chỉ dùng 1 lần để lấy access token mới. Lưu ở httpOnly cookie — JavaScript không đọc được → phòng XSS.</li>
@@ -1530,7 +1650,7 @@ signed, _ := token.<span class="fn">SignedString</span>([]<span class="kw">byte<
       <div class="answer-text">
         <p>Repository Pattern tách biệt <strong>business logic khỏi data access logic</strong> bằng cách định nghĩa interface trừu tượng cho việc persist/retrieve domain objects. Business layer chỉ biết interface — không biết Postgres, MongoDB hay Redis tồn tại.</p>
       </div>
-      <div class="code-block"><span class="cm">// ── STEP 1: Domain layer định nghĩa interface ──</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── STEP 1: Domain layer định nghĩa interface ──</span>
 <span class="cm">// File: internal/domain/repository/user_repository.go</span>
 <span class="kw">type</span> UserRepository <span class="kw">interface</span> {
     <span class="fn">FindByID</span>(ctx context.Context, id string) (*entity.User, <span class="kw">error</span>)
@@ -1591,7 +1711,7 @@ signed, _ := token.<span class="fn">SignedString</span>([]<span class="kw">byte<
 <span class="cm">// ── STEP 5: Wire trong main.go ──</span>
 pgRepo    := postgres.NewUserPostgresRepo(db, log)
 cachedRepo := redis.NewUserRedisRepo(rdb, pgRepo, time.Hour)
-usecase   := usecase.NewUserUsecase(cachedRepo) <span class="cm">// swap bất cứ lúc nào</span></div>
+usecase   := usecase.NewUserUsecase(cachedRepo) <span class="cm">// swap bất cứ lúc nào</span></div></div>
 
       <div class="key-points"><ul>
         <li><strong>Testability</strong>: unit test usecase với mock repository — không cần spin up Postgres.</li>
@@ -1618,7 +1738,7 @@ usecase   := usecase.NewUserUsecase(cachedRepo) <span class="cm">// swap bất c
       <div class="answer-text">
         <p>Singleton đảm bảo chỉ có <strong>một instance duy nhất</strong> của một type trong toàn bộ application lifecycle. Dùng cho: DB connection pool, config, logger — những thứ expensive to create và share được.</p>
       </div>
-      <div class="code-block"><span class="cm">// ── Pattern 1: sync.Once — idiomatic Go ──</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Pattern 1: sync.Once — idiomatic Go ──</span>
 <span class="kw">var</span> (
     dbInstance *sql.DB
     dbOnce     sync.Once
@@ -1652,7 +1772,7 @@ usecase   := usecase.NewUserUsecase(cachedRepo) <span class="cm">// swap bất c
 <span class="kw">type</span> Server <span class="kw">struct</span> { db *sql.DB }
 <span class="kw">func</span> NewServer(db *sql.DB) *Server { <span class="kw">return</span> &amp;Server{db: db} }
 <span class="cm">// Trong main: db = GetDB(cfg); server = NewServer(db)</span>
-<span class="cm">// Mỗi component nhận DB qua constructor — không gọi global</span></div>
+<span class="cm">// Mỗi component nhận DB qua constructor — không gọi global</span></div></div>
 
       <div class="key-points"><ul>
         <li><strong>Nên dùng Singleton cho</strong>: DB connection pool, Redis client, config loader, logger — global resource, expensive to create, stateless behavior.</li>
@@ -1684,7 +1804,7 @@ usecase   := usecase.NewUserUsecase(cachedRepo) <span class="cm">// swap bất c
       <div class="answer-text">
         <p>Subject notify nhiều observers khi có sự kiện. Loose coupling — subject không biết observer cụ thể.</p>
       </div>
-      <div class="code-block"><span class="kw">type</span> EventBus <span class="kw">struct</span> {
+      <div class="code-block"><div class="code-block-inner"><span class="kw">type</span> EventBus <span class="kw">struct</span> {
     handlers <span class="kw">map</span>[<span class="kw">string</span>][]<span class="kw">func</span>(Event)
     mu       sync.RWMutex
 }
@@ -1699,10 +1819,10 @@ usecase   := usecase.NewUserUsecase(cachedRepo) <span class="cm">// swap bất c
 <span class="cm">// user.registered → emailService, analyticsService, notifyService</span>
 bus.Subscribe(<span class="str">"user.registered"</span>, emailSvc.SendWelcome)
 bus.Subscribe(<span class="str">"user.registered"</span>, analytics.Track)
-bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID})</div>
+bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID})</div></div>
 
       <div class="ans-label">Factory Pattern</div>
-      <div class="code-block"><span class="cm">// Tách logic khởi tạo, client chỉ biết interface</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Tách logic khởi tạo, client chỉ biết interface</span>
 <span class="kw">func</span> NewStorageProvider(kind <span class="kw">string</span>, cfg Config) StorageProvider {
     <span class="kw">switch</span> kind {
     <span class="kw">case</span> <span class="str">"s3"</span>:    <span class="kw">return</span> NewS3Provider(cfg)
@@ -1711,7 +1831,7 @@ bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID}
     }
 }
 <span class="cm">// Dùng cho: payment gateway, storage provider, notification channel</span>
-<span class="cm">// Client: storage := NewStorageProvider(os.Getenv("STORAGE"), cfg)</span></div>
+<span class="cm">// Client: storage := NewStorageProvider(os.Getenv("STORAGE"), cfg)</span></div></div>
     </div>
   </div>
 </div>
@@ -1778,7 +1898,7 @@ bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID}
         <li><strong>5. Readability & Maintainability</strong>: tên variable/function có rõ nghĩa không? Function quá dài? Comment có cần không?</li>
         <li><strong>6. Test coverage</strong>: có unit test không? Test cover happy path và edge cases chưa?</li>
       </ul></div>
-      <div class="code-block"><span class="cm">// Comment review tốt: explain reason + suggest fix</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Comment review tốt: explain reason + suggest fix</span>
 
 <span class="cm">// ❌ Bad comment</span>
 <span class="cm">// "This is wrong"</span>
@@ -1792,7 +1912,7 @@ bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID}
 <span class="cm">// [blocking]:  phải fix trước khi merge</span>
 <span class="cm">// [nit]:       nhỏ nhặt, có thể fix hoặc không</span>
 <span class="cm">// [question]:  mình không hiểu, cần giải thích</span>
-<span class="cm">// [suggestion]: idea, không bắt buộc</span></div>
+<span class="cm">// [suggestion]: idea, không bắt buộc</span></div></div>
       <div class="trap-box">
         <div class="trap-box-title">⚠ Tránh khi review</div>
         <p>Tránh <strong>nitpicking style</strong> khi đã có linter/formatter — để tool làm việc đó. Tránh comment mang tính cá nhân ("bạn sai rồi") — review code, không review người. Tránh approve PR mà không thực sự đọc vì "trust teammate".</p>
@@ -1814,7 +1934,7 @@ bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID}
       <div class="answer-text">
         <p>Có. Unit test verify một unit (function/method) hoạt động đúng <strong>độc lập với dependencies</strong>. Go có built-in testing package, không cần framework bên ngoài.</p>
       </div>
-      <div class="code-block"><span class="cm">// user_usecase_test.go</span>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// user_usecase_test.go</span>
 <span class="kw">package</span> usecase_test
 
 <span class="cm">// 1. Định nghĩa mock implement interface</span>
@@ -1859,7 +1979,7 @@ bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID}
             }
         })
     }
-}</div>
+}</div></div>
       <div class="key-points"><ul>
         <li><strong>Table-driven tests</strong>: idiomatic Go — dễ thêm test case, dễ đọc.</li>
         <li><strong>Mock bằng interface</strong>: vì Go dùng implicit interface, tạo mock đơn giản. Hoặc dùng <strong>testify/mock</strong>, <strong>mockgen</strong> để generate mock tự động.</li>
@@ -1870,19 +1990,686 @@ bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID}
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SECTION: NESTJS / NODE.JS — Senior Level         -->
+<!-- ══════════════════════════════════════════════════ -->
+<div id="sec-nest" class="section section-nest">
+  <div class="section-head">
+    <span class="section-num">06</span>
+    <h2 class="section-title">NestJS / Node.js <span style="font-size:14px;font-weight:400;opacity:0.6">— Senior Level</span></h2>
+  </div>
+
+  <div class="cat-label">Node.js Core & Event Loop</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">01</span>
+      <span class="q-text">Event Loop hoạt động thế nào? Tại sao single-threaded vẫn handle được nhiều request? Khi nào block event loop?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Node.js chạy trên <strong>single thread</strong> nhưng handle I/O concurrently nhờ <strong>Event Loop + libuv</strong>. Mỗi async op (DB query, HTTP call) được đẩy ra OS hoặc libuv thread pool — giải phóng main thread để nhận request khác. Khi I/O xong, callback được queue vào Event Loop để pick up.</p>
+      </div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Event Loop phases — thực thi theo thứ tự này mỗi vòng:</span>
+<span class="cm">// 1. timers     — setTimeout / setInterval đã hết hạn</span>
+<span class="cm">// 2. I/O        — async I/O callbacks (network, file)</span>
+<span class="cm">// 3. poll       — fetch new I/O events, BLOCK ở đây nếu queue rỗng</span>
+<span class="cm">// 4. check      — setImmediate() callbacks</span>
+<span class="cm">// 5. close      — socket.on("close") callbacks</span>
+
+<span class="cm">// Microtask queue — chạy SAU MỖI phase, trước phase kế tiếp:</span>
+<span class="cm">// process.nextTick()  ← ưu tiên cao nhất, trước Promise</span>
+<span class="cm">// Promise.then() / await</span>
+
+console.log(<span class="str">"1: sync"</span>);
+process.nextTick(() =&gt; console.log(<span class="str">"2: nextTick"</span>));
+Promise.resolve().then(() =&gt; console.log(<span class="str">"3: Promise"</span>));
+setImmediate(() =&gt; console.log(<span class="str">"4: setImmediate"</span>));
+setTimeout(() =&gt; console.log(<span class="str">"5: setTimeout 0"</span>), 0);
+<span class="cm">// Output: 1 → 2 → 3 → 4 → 5  (nextTick trước Promise, setImmediate sau cùng)</span></div></div>
+      <div class="key-points"><ul>
+        <li><strong>libuv thread pool</strong> (mặc định 4 threads): xử lý <code>fs</code>, <code>crypto</code>, <code>dns.lookup</code>. Network I/O (TCP/UDP) dùng OS async — không cần thread pool. Tăng qua <code>UV_THREADPOOL_SIZE=16</code>.</li>
+        <li><strong>Block event loop</strong>: CPU-heavy sync code (heavy regex, <code>JSON.parse</code> file lớn, crypto sync) → tất cả request bị treo. Fix: Worker Threads cho CPU-bound tasks.</li>
+        <li><strong>Node.js phù hợp</strong>: I/O-bound high concurrency (API gateway, BFF, chat). <strong>Không phù hợp</strong>: CPU-bound (video transcode, ML) — dùng Go hoặc Worker Threads.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Senior-level: cách measure event loop lag</div>
+        <p><code>perf_hooks.monitorEventLoopDelay()</code> (Node 11+) để detect lag. Lag &gt; 100ms consistently → có blocking code. <code>clinic doctor</code> visualize event loop utilization theo time. Alert khi lag vượt ngưỡng trong production.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">02</span>
+      <span class="q-text">Async/Await pitfalls senior hay gặp — unhandled rejection, sequential vs parallel, error trong forEach?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời — Focus vào pitfalls, không phải basics</div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Pitfall 1: await tuần tự khi có thể parallel ──</span>
+<span class="cm">// BAD: 300ms total (100 + 100 + 100ms)</span>
+const user    = await getUser(id);
+const config  = await getConfig();
+const perms   = await getPermissions();
+
+<span class="cm">// GOOD: 100ms total (parallel)</span>
+const [user, config, perms] = await Promise.all([
+  getUser(id), getConfig(), getPermissions(),
+]);
+<span class="cm">// allSettled khi partial failure ok:</span>
+const results = await Promise.allSettled([op1(), op2()]);
+results.forEach(r =&gt; r.status === "fulfilled" ? use(r.value) : log(r.reason));
+
+<span class="cm">// ── Pitfall 2: async trong forEach — errors bị swallow ──</span>
+<span class="cm">// BAD: forEach không await, unhandled rejection</span>
+items.forEach(async (item) =&gt; { await process(item); });
+
+<span class="cm">// GOOD:</span>
+await Promise.all(items.map(item =&gt; process(item)));  <span class="cm">// parallel</span>
+for (const item of items) { await process(item); }   <span class="cm">// sequential nếu cần order</span>
+
+<span class="cm">// ── Pitfall 3: unhandled rejection — crash Node 15+ ──</span>
+process.on("unhandledRejection", (reason, promise) =&gt; {
+  logger.error("Unhandled rejection", { reason });
+  <span class="cm">// graceful shutdown nếu critical error</span>
+});
+
+<span class="cm">// ── Pitfall 4: Promise timeout pattern ──</span>
+const withTimeout = &lt;T&gt;(promise: Promise&lt;T&gt;, ms: number): Promise&lt;T&gt; =&gt;
+  Promise.race([
+    promise,
+    new Promise&lt;never&gt;((_, reject) =&gt;
+      setTimeout(() =&gt; reject(new Error("Timeout")), ms)
+    ),
+  ]);</div></div>
+      <div class="key-points"><ul>
+        <li><strong>Promise.race</strong>: resolve/reject ngay khi cái đầu tiên settle — dùng cho timeout pattern.</li>
+        <li><strong>Promise.any</strong>: resolve ngay khi cái đầu tiên resolve, reject khi TẤT CẢ reject — dùng cho fallback pattern.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="cat-label">Decorator & Metadata — Thực tế đã dùng</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">03</span>
+      <span class="q-text">Decorator trong NestJS — Reflect.metadata hoạt động thế nào? Viết Custom Decorator production-grade?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Cơ chế: Reflect.metadata + emitDecoratorMetadata</div>
+      <div class="answer-text">
+        <p>NestJS dùng <strong>reflect-metadata</strong> polyfill để attach metadata vào class/method/param lúc compile time (TypeScript decorators). Runtime đọc metadata để tự routing, inject, guard.</p>
+      </div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Cơ chế bên trong:</span>
+<span class="cm">// @Controller("users") thực chất là:</span>
+Reflect.defineMetadata("path", "users", UserController);
+<span class="cm">// emitDecoratorMetadata: true → TypeScript tự emit type info:</span>
+Reflect.defineMetadata("design:paramtypes", [UserRepo, Logger], UserService);
+<span class="cm">// → NestJS biết inject đúng type mà không cần annotation thêm</span>
+
+<span class="cm">// ── Custom Param Decorator: @CurrentUser() ──</span>
+export const CurrentUser = createParamDecorator(
+  (field: keyof User | undefined, ctx: ExecutionContext) =&gt; {
+    const req = ctx.switchToHttp().getRequest&lt;Request & { user: User }&gt;();
+    return field ? req.user?.[field] : req.user;
+  },
+);
+<span class="cm">// @CurrentUser() user: User  hoặc  @CurrentUser("id") userId: string</span>
+
+<span class="cm">// ── Custom Class Decorator: @Roles() + @Public() ──</span>
+export const ROLES_KEY = "roles";
+export const Roles = (...roles: Role[]) =&gt; SetMetadata(ROLES_KEY, roles);
+export const Public = () =&gt; SetMetadata("isPublic", true);
+
+<span class="cm">// ── applyDecorators: compose nhiều decorators thành 1 ──</span>
+export const Auth = (...roles: Role[]) =&gt; applyDecorators(
+  Roles(...roles),
+  UseGuards(JwtAuthGuard, RolesGuard),
+  ApiBearerAuth(),        <span class="cm">// Swagger</span>
+  ApiUnauthorizedResponse({ description: "Unauthorized" }),
+);
+<span class="cm">// @Auth("admin") thay vì 4 decorators riêng — DRY, nhất quán</span>
+
+<span class="cm">// ── Custom method decorator: @AuditLog() ──</span>
+export function AuditLog(action: string) {
+  return function (target: any, key: string, descriptor: PropertyDescriptor) {
+    const original = descriptor.value;
+    descriptor.value = async function (...args: any[]) {
+      const result = await original.apply(this, args);
+      await auditService.log({ action, args, result }); <span class="cm">// AOP logging</span>
+      return result;
+    };
+  };
+}</div></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Khi interviewer hỏi "tại sao Reflector.getAllAndOverride?"</div>
+        <p><code>getAllAndOverride</code> check metadata ở method level trước, rồi class level — method-level metadata override class-level. <code>getAllAndMerge</code> merge tất cả metadata từ cả hai. Dùng <code>getAllAndOverride</code> cho roles, <code>getAllAndMerge</code> khi muốn accumulate permissions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Guards & Interceptors — Production Grade</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">04</span>
+      <span class="q-text">Implement JWT AuthGuard + RolesGuard production-grade. Request lifecycle thực thi thế nào?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Request lifecycle đầy đủ</div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// Middleware → Guard → Interceptor(pre) → Pipe → Handler → Interceptor(post) → ExceptionFilter</span>
+
+<span class="cm">// ── JWT AuthGuard với @Public() bypass support ──</span>
+@Injectable()
+export class JwtAuthGuard implements CanActivate {
+  constructor(private jwtService: JwtService, private reflector: Reflector) {}
+
+  async canActivate(ctx: ExecutionContext): Promise&lt;boolean&gt; {
+    const isPublic = this.reflector.getAllAndOverride&lt;boolean&gt;("isPublic", [
+      ctx.getHandler(), ctx.getClass(),
+    ]);
+    if (isPublic) return true;
+
+    const req = ctx.switchToHttp().getRequest();
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) throw new UnauthorizedException("Missing token");
+
+    try {
+      req.user = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET,
+      });
+      return true;
+    } catch {
+      throw new UnauthorizedException("Invalid or expired token");
+    }
+  }
+}
+
+<span class="cm">// ── RolesGuard — phân quyền dựa trên Reflect metadata ──</span>
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(ctx: ExecutionContext): boolean {
+    const required = this.reflector.getAllAndOverride&lt;Role[]&gt;(ROLES_KEY, [
+      ctx.getHandler(), ctx.getClass(),
+    ]);
+    if (!required?.length) return true;
+
+    const { user } = ctx.switchToHttp().getRequest();
+    if (!required.some(r =&gt; user?.roles?.includes(r)))
+      throw new ForbiddenException("Insufficient permissions");
+    return true;
+  }
+}
+
+<span class="cm">// ── LoggingInterceptor với RxJS + tap ──</span>
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  intercept(ctx: ExecutionContext, next: CallHandler): Observable&lt;any&gt; {
+    const { method, url, user } = ctx.switchToHttp().getRequest();
+    const start = Date.now();
+
+    return next.handle().pipe(
+      tap({
+        next: () =&gt; logger.log({ method, url, ms: Date.now()-start, userId: user?.id }),
+        error: err =&gt; logger.error({ method, url, ms: Date.now()-start, err: err.message }),
+      }),
+      map(data =&gt; ({ success: true, data, timestamp: new Date().toISOString() })),
+    );
+  }
+}
+
+<span class="cm">// ── QUAN TRỌNG: global guard với DI phải dùng APP_GUARD ──</span>
+<span class="cm">// BAD: app.useGlobalGuards(new JwtAuthGuard()) — không có DI</span>
+<span class="cm">// GOOD: trong AppModule providers:</span>
+{ provide: APP_GUARD, useClass: JwtAuthGuard },   <span class="cm">// có full DI</span>
+{ provide: APP_GUARD, useClass: RolesGuard },</div></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Guard trong GraphQL context</div>
+        <p>Guard mặc định dùng <code>switchToHttp()</code> — sẽ fail với GraphQL request. Cần check: <code>ctx.getType() === "graphql"</code> và dùng <code>GqlExecutionContext.create(ctx).getContext().req</code> để lấy request đúng cách.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">05</span>
+      <span class="q-text">Viết CacheInterceptor và TransactionInterceptor — AOP pattern trong NestJS thực tế?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">AOP: tách cross-cutting concern khỏi business logic</div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Cache Interceptor với custom TTL decorator ──</span>
+export const CacheTTL = (ttl: number) =&gt; SetMetadata("cache_ttl", ttl);
+export const CacheKey = (key: string) =&gt; SetMetadata("cache_key", key);
+
+@Injectable()
+export class HttpCacheInterceptor implements NestInterceptor {
+  constructor(
+    @Inject(CACHE_MANAGER) private cache: Cache,
+    private reflector: Reflector,
+  ) {}
+
+  async intercept(ctx: ExecutionContext, next: CallHandler): Promise&lt;Observable&lt;any&gt;&gt; {
+    const req = ctx.switchToHttp().getRequest();
+    if (req.method !== "GET") return next.handle(); <span class="cm">// chỉ cache GET</span>
+
+    const customKey = this.reflector.get&lt;string&gt;("cache_key", ctx.getHandler());
+    const ttl = this.reflector.get&lt;number&gt;("cache_ttl", ctx.getHandler()) ?? 60;
+    const key = customKey ?? req.url;
+
+    const cached = await this.cache.get(key);
+    if (cached) return of(cached); <span class="cm">// cache HIT — bypass handler</span>
+
+    return next.handle().pipe(
+      tap(response =&gt; this.cache.set(key, response, ttl)),
+    );
+  }
+}
+
+<span class="cm">// ── Transaction Interceptor — DB transaction quanh handler ──</span>
+@Injectable()
+export class TransactionInterceptor implements NestInterceptor {
+  constructor(private dataSource: DataSource) {}
+
+  async intercept(ctx: ExecutionContext, next: CallHandler): Promise&lt;Observable&lt;any&gt;&gt; {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    ctx.switchToHttp().getRequest().queryRunner = qr; <span class="cm">// inject vào request</span>
+
+    return next.handle().pipe(
+      tap(async () =&gt; await qr.commitTransaction()),
+      catchError(async (err) =&gt; {
+        await qr.rollbackTransaction();
+        throw err;
+      }),
+      finalize(() =&gt; qr.release()),
+    );
+  }
+}
+<span class="cm">// @UseInterceptors(TransactionInterceptor) — handler không biết transaction</span>
+<span class="cm">// Repository nhận queryRunner từ request để dùng chung transaction</span></div></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Tại sao interceptor, không phải middleware?</div>
+        <p>Middleware không có access vào Reflect metadata (TTL, cache key) và không wrap response stream. Interceptor có <strong>cả hai</strong>: đọc decorator metadata qua Reflector và control toàn bộ request-response pipeline qua RxJS Observable.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Microservices & gRPC — Thực tế đã dùng</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">06</span>
+      <span class="q-text">NestJS gRPC — setup, proto definition, bidirectional streaming, error handling, retry?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>gRPC là protocol buffer-based RPC — typed contract, binary serialization (nhanh hơn JSON ~5x), hỗ trợ streaming. NestJS wrap gRPC qua <code>@nestjs/microservices</code>.</p>
+      </div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── 1. Proto definition ──</span>
+syntax = "proto3";
+package user;
+service UserService {
+  rpc GetUser (UserRequest) returns (UserResponse);              // unary
+  rpc StreamEvents (EventRequest) returns (stream EventResponse); // server stream
+  rpc Chat (stream ChatMessage) returns (stream ChatMessage);    // bidirectional
+}
+message UserRequest  { string user_id = 1; }
+message UserResponse { string id = 1; string email = 2; }
+
+<span class="cm">// ── 2. Server: gRPC handler ──</span>
+@Controller()
+export class UserGrpcController {
+  @GrpcMethod("UserService", "GetUser")
+  async getUser(data: UserRequest, metadata: Metadata): Promise&lt;UserResponse&gt; {
+    const user = await this.userSvc.findById(data.userId);
+    if (!user) throw new RpcException({ code: status.NOT_FOUND, message: "Not found" });
+    return { id: user.id, email: user.email };
+  }
+
+  @GrpcStreamMethod("UserService", "Chat")
+  chat(messages: Observable&lt;ChatMessage&gt;): Observable&lt;ChatMessage&gt; {
+    return messages.pipe(
+      map(msg =&gt; ({ text: `Echo: ${msg.text}`, userId: msg.userId })),
+      catchError(err =&gt; throwError(() =&gt; new RpcException(err))),
+    );
+  }
+}
+
+<span class="cm">// ── 3. Client: gọi gRPC với timeout + retry ──</span>
+@Injectable()
+export class OrderService implements OnModuleInit {
+  private userSvc: UserServiceClient;
+  constructor(@Inject("USER_PACKAGE") private client: ClientGrpc) {}
+
+  onModuleInit() {
+    this.userSvc = this.client.getService&lt;UserServiceClient&gt;("UserService");
+  }
+
+  async getUser(userId: string) {
+    return firstValueFrom(
+      this.userSvc.getUser({ userId }).pipe(
+        timeout(3000),
+        retry({ count: 2, delay: (err, i) =&gt; timer(i * 1000) }), <span class="cm">// exp backoff</span>
+        catchError(err =&gt; throwError(() =&gt; new ServiceUnavailableException())),
+      )
+    );
+  }
+}</div></div>
+      <div class="key-points"><ul>
+        <li><strong>RpcException</strong>: throw với gRPC status code (<code>NOT_FOUND</code>, <code>PERMISSION_DENIED</code>). Map sang HTTP qua ExceptionFilter nếu expose qua REST gateway.</li>
+        <li><strong>Metadata</strong>: tương đương HTTP headers — truyền auth token, request ID, trace ID giữa services.</li>
+        <li><strong>gRPC vs REST</strong>: gRPC tốt cho internal service-to-service (typed, fast, streaming). REST tốt cho external/public API (browser support, human-readable).</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">07</span>
+      <span class="q-text">NestJS + RabbitMQ — MessagePattern vs EventPattern, manual ACK, DLQ, và retry strategy?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Event Pattern với manual ACK + DLQ ──</span>
+@EventPattern("order.created")
+async handleOrderCreated(
+  @Payload() event: OrderCreatedEvent,
+  @Ctx() ctx: RmqContext,
+) {
+  const channel = ctx.getChannelRef();
+  const msg = ctx.getMessage();
+  try {
+    await this.notificationSvc.sendEmail(event.userId, event.orderId);
+    channel.ack(msg);              <span class="cm">// thành công: xóa khỏi queue</span>
+  } catch (err) {
+    const retryCount = (msg.properties.headers["x-death"]?.[0]?.count ?? 0);
+    if (retryCount &gt;= 3) {
+      channel.nack(msg, false, false); <span class="cm">// &gt; 3 lần → vào DLQ</span>
+      this.logger.error("Moved to DLQ", event);
+    } else {
+      channel.nack(msg, false, true);  <span class="cm">// retry: requeue</span>
+    }
+  }
+}
+
+<span class="cm">// ── RabbitMQ setup production ──</span>
+app.connectMicroservice&lt;MicroserviceOptions&gt;({
+  transport: Transport.RMQ,
+  options: {
+    urls: [process.env.RABBITMQ_URL],
+    queue: "notification_queue",
+    noAck: false,        <span class="cm">// manual ACK — không mất message khi crash</span>
+    prefetchCount: 10,   <span class="cm">// backpressure: max 10 messages đang xử lý</span>
+    queueOptions: {
+      durable: true,                          <span class="cm">// survive broker restart</span>
+      arguments: {
+        "x-dead-letter-exchange": "dlx",      <span class="cm">// NACK → DLX</span>
+        "x-message-ttl": 86400000,            <span class="cm">// message expire 24h</span>
+      },
+    },
+  },
+});</div></div>
+      <div class="key-points"><ul>
+        <li><strong>noAck: false</strong>: luôn dùng manual ACK trong production — message không mất khi service crash giữa chừng.</li>
+        <li><strong>prefetchCount</strong>: giới hạn số messages consumer nhận cùng lúc — backpressure, tránh OOM.</li>
+        <li><strong>x-death header</strong>: RabbitMQ tự track số lần message bị nack/expired — dùng để implement retry limit.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="cat-label">GraphQL Module — Thực tế đã dùng</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">08</span>
+      <span class="q-text">GraphQL trong NestJS — Code-first, DataLoader giải quyết N+1, Subscription, và security?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Code-first với DataLoader — giải quyết N+1</div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Setup ──</span>
+GraphQLModule.forRoot&lt;ApolloDriverConfig&gt;({
+  driver: ApolloDriver,
+  autoSchemaFile: true,           <span class="cm">// code-first: generate schema từ decorators</span>
+  context: ({ req }) =&gt; ({ req }),
+  subscriptions: { "graphql-ws": true },
+  introspection: false,           <span class="cm">// disable trong production!</span>
+  plugins: [ApolloServerPluginUsageReporting()],
+})
+
+<span class="cm">// ── Resolver + Field Resolver ──</span>
+@Resolver(() =&gt; User)
+export class UserResolver {
+  constructor(private ordersLoader: OrdersDataLoader) {}
+
+  @Query(() =&gt; User)
+  @UseGuards(GqlAuthGuard)
+  async user(@Args("id", { type: () =&gt; ID }) id: string) {
+    return this.userSvc.findById(id);
+  }
+
+  @ResolveField("orders", () =&gt; [Order])
+  async orders(@Parent() user: User): Promise&lt;Order[]&gt; {
+    return this.ordersLoader.load(user.id); <span class="cm">// DataLoader batch!</span>
+  }
+
+  @Subscription(() =&gt; Order, {
+    filter: (payload, variables) =&gt;
+      payload.orderCreated.userId === variables.userId,
+  })
+  orderCreated(@Args("userId") userId: string) {
+    return this.pubSub.asyncIterator("ORDER_CREATED");
+  }
+}
+
+<span class="cm">// ── DataLoader: batch N user IDs → 1 query ──</span>
+@Injectable({ scope: Scope.REQUEST }) <span class="cm">// REQUEST scope: 1 loader per request</span>
+export class OrdersDataLoader implements NestDataLoader&lt;string, Order[]&gt; {
+  constructor(private orderRepo: OrderRepository) {}
+
+  generateDataLoader(): DataLoader&lt;string, Order[]&gt; {
+    return new DataLoader(async (userIds: readonly string[]) =&gt; {
+      const orders = await this.orderRepo.findByUserIds([...userIds]);
+      const grouped = groupBy(orders, "userId");
+      return userIds.map(id =&gt; grouped[id] ?? []);
+      <span class="cm">// 1 query: SELECT * FROM orders WHERE user_id IN (id1, id2, ...)</span>
+      <span class="cm">// Thay vì N queries cho N users — giải quyết hoàn toàn N+1</span>
+    });
+  }
+}
+
+<span class="cm">// ── GqlAuthGuard: context khác HTTP ──</span>
+@Injectable()
+export class GqlAuthGuard extends AuthGuard("jwt") {
+  getRequest(ctx: ExecutionContext) {
+    const gqlCtx = GqlExecutionContext.create(ctx);
+    return gqlCtx.getContext().req; <span class="cm">// lấy request từ GQL context, không phải HTTP</span>
+  }
+}</div></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ GraphQL security — không để defaults trong production</div>
+        <p><strong>Introspection OFF</strong>: không expose schema cho attacker. <strong>Query depth limit</strong>: <code>graphql-depth-limit</code> plugin — reject query lồng sâu quá N level (DoS vector). <strong>Query complexity</strong>: tính cost của mỗi field, reject query quá expensive. <strong>Rate limit per operation</strong> khác với rate limit per IP.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Architecture & Testing</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">09</span>
+      <span class="q-text">DDD trong NestJS — Aggregate Root, Domain Events, CQRS pattern thực tế?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Aggregate Root với Domain Events (NestJS CQRS) ──</span>
+export class Order extends AggregateRoot {
+  private constructor(
+    public readonly id: string,
+    private _status: OrderStatus,
+    private _items: OrderItem[],
+    private _total: Money,
+  ) { super(); }
+
+  static create(props: CreateOrderProps): Order {
+    const order = new Order(uuid(), OrderStatus.PENDING, props.items,
+      Money.calculate(props.items));
+    order.apply(new OrderCreatedEvent(order)); <span class="cm">// emit domain event</span>
+    return order;
+  }
+
+  confirm(): void {
+    if (this._status !== OrderStatus.PENDING)
+      throw new DomainException("Only pending orders can be confirmed");
+    this._status = OrderStatus.CONFIRMED;
+    this.apply(new OrderConfirmedEvent(this.id));
+  }
+}
+
+<span class="cm">// ── CQRS Command Handler ──</span>
+@CommandHandler(CreateOrderCommand)
+export class CreateOrderHandler implements ICommandHandler&lt;CreateOrderCommand&gt; {
+  constructor(
+    private repo: IOrderRepository,
+    private publisher: EventPublisher,
+  ) {}
+
+  async execute(cmd: CreateOrderCommand): Promise&lt;Order&gt; {
+    const order = this.publisher.mergeObjectContext(Order.create(cmd));
+    await this.repo.save(order);
+    order.commit(); <span class="cm">// publish tất cả pending domain events → EventBus</span>
+    return order;
+  }
+}
+
+<span class="cm">// ── Event Handler: react to domain event ──</span>
+@EventsHandler(OrderCreatedEvent)
+export class OrderCreatedHandler implements IEventHandler&lt;OrderCreatedEvent&gt; {
+  async handle(event: OrderCreatedEvent) {
+    await this.emailSvc.sendConfirmation(event.userId);
+    await this.inventorySvc.reserve(event.items);
+    this.client.emit("order.created", event); <span class="cm">// publish to Kafka/RabbitMQ</span>
+  }
+}</div></div>
+      <div class="key-points"><ul>
+        <li><strong>AggregateRoot.apply()</strong>: register domain event. <strong>commit()</strong>: publish tất cả events qua NestJS EventBus sau khi save thành công.</li>
+        <li><strong>CQRS</strong>: Command (write) và Query (read) tách biệt — Command Handler thay đổi state, Query Handler đọc data (có thể từ read model khác).</li>
+        <li><strong>Domain Event vs Application Event</strong>: Domain Event thuộc domain layer (không import framework). Application Event là NestJS EventEmitter — infrastructure.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">10</span>
+      <span class="q-text">Testing NestJS senior-level — unit test use-case, integration test với TestContainers, E2E test GraphQL?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">3 cấp độ testing production</div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ── 1. Unit Test: use-case với mock ──</span>
+describe("CreateOrderHandler", () =&gt; {
+  let handler: CreateOrderHandler;
+  let repo: jest.Mocked&lt;IOrderRepository&gt;;
+
+  beforeEach(async () =&gt; {
+    const module = await Test.createTestingModule({
+      providers: [
+        CreateOrderHandler,
+        { provide: IOrderRepository, useValue: { save: jest.fn() } },
+        { provide: EventPublisher, useValue: { mergeObjectContext: jest.fn(o =&gt; o) } },
+      ],
+    }).compile();
+    handler = module.get(CreateOrderHandler);
+    repo = module.get(IOrderRepository);
+  });
+
+  it("should create order and commit domain events", async () =&gt; {
+    repo.save.mockResolvedValue(undefined);
+    const spy = jest.spyOn(Order.prototype, "commit");
+
+    await handler.execute(new CreateOrderCommand({ userId: "u1", items: [] }));
+
+    expect(repo.save).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalled(); <span class="cm">// domain events published</span>
+  });
+});
+
+<span class="cm">// ── 2. Integration Test với TestContainers ──</span>
+describe("OrderRepository (integration)", () =&gt; {
+  let container: StartedPostgreSqlContainer;
+
+  beforeAll(async () =&gt; {
+    container = await new PostgreSqlContainer().start();
+    dataSource = await createDataSource(container.getConnectionUri()).initialize();
+    await dataSource.runMigrations(); <span class="cm">// test với real migrations</span>
+  });
+  afterAll(async () =&gt; { await dataSource.destroy(); await container.stop(); });
+
+  it("should persist aggregate and retrieve by id", async () =&gt; {
+    const order = Order.create({ userId: "u1", items: [] });
+    await repo.save(order);
+    const found = await repo.findById(order.id);
+    expect(found.id).toBe(order.id);
+  });
+});
+
+<span class="cm">// ── 3. E2E Test: GraphQL mutation ──</span>
+describe("OrderResolver (e2e)", () =&gt; {
+  beforeAll(async () =&gt; {
+    const module = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(DataSource).useValue(testDataSource) <span class="cm">// swap real DB</span>
+      .compile();
+    app = module.createNestApplication();
+    await app.init();
+  });
+
+  it("createOrder mutation returns PENDING order", async () =&gt; {
+    const { body } = await request(app.getHttpServer())
+      .post("/graphql")
+      .set("Authorization", `Bearer ${testJwt}`)
+      .send({ query: `mutation { createOrder(input:{userId:"u1",items:[]}) { id status } }` })
+      .expect(200);
+
+    expect(body.data.createOrder.status).toBe("PENDING");
+    expect(body.errors).toBeUndefined();
+  });
+});</div></div>
+      <div class="key-points"><ul>
+        <li><strong>Unit test</strong>: test domain + use-case logic — không cần DB, chạy &lt;1ms mỗi test.</li>
+        <li><strong>Integration test</strong>: test repository với real Postgres qua TestContainers — đảm bảo schema và query đúng.</li>
+        <li><strong>E2E test</strong>: test HTTP/GraphQL flow — cover auth, validation, response format. Ít hơn nhưng high-value.</li>
+      </ul></div>
+    </div>
+  </div>
+
+</div>
+
 </div><!-- end content-area -->
 
-<script>
-function switchTab(tab, btn) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('sec-' + tab).classList.add('active');
-  btn.classList.add('active');
-}
 
-function toggleCard(card) {
-  card.classList.toggle('open');
-}
-</script>
 </body>
 </html>
