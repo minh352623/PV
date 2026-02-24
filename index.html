@@ -2031,9 +2031,10 @@ setImmediate(() =&gt; console.log(<span class="str">"4: setImmediate"</span>));
 setTimeout(() =&gt; console.log(<span class="str">"5: setTimeout 0"</span>), 0);
 <span class="cm">// Output: 1 → 2 → 3 → 4 → 5  (nextTick trước Promise, setImmediate sau cùng)</span></div></div>
       <div class="key-points"><ul>
-        <li><strong>libuv thread pool</strong> (mặc định 4 threads): xử lý <code>fs</code>, <code>crypto</code>, <code>dns.lookup</code>. Network I/O (TCP/UDP) dùng OS async — không cần thread pool. Tăng qua <code>UV_THREADPOOL_SIZE=16</code>.</li>
-        <li><strong>Block event loop</strong>: CPU-heavy sync code (heavy regex, <code>JSON.parse</code> file lớn, crypto sync) → tất cả request bị treo. Fix: Worker Threads cho CPU-bound tasks.</li>
-        <li><strong>Node.js phù hợp</strong>: I/O-bound high concurrency (API gateway, BFF, chat). <strong>Không phù hợp</strong>: CPU-bound (video transcode, ML) — dùng Go hoặc Worker Threads.</li>
+        <li><strong>libuv thread pool</strong> (mặc định 4 threads): xử lý <code>fs</code>, <code>crypto</code>, <code>dns.lookup</code>. Tăng qua <code>UV_THREADPOOL_SIZE=16</code>.</li>
+        <li><strong>Network I/O</strong> (TCP/UDP) dùng OS async trực tiếp — không cần thread pool, nên rất nhanh.</li>
+        <li><strong>Block event loop</strong>: heavy regex, <code>JSON.parse</code> file lớn, crypto sync → mọi request bị treo. Fix: dùng Worker Threads.</li>
+        <li><strong>Phù hợp</strong>: I/O-bound high concurrency (API gateway, BFF, chat). <strong>Không phù hợp</strong>: CPU-bound (video transcode, ML).</li>
       </ul></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Senior-level: cách measure event loop lag</div>
@@ -2051,6 +2052,9 @@ setTimeout(() =&gt; console.log(<span class="str">"5: setTimeout 0"</span>), 0);
     </div>
     <div class="q-body">
       <div class="ans-label">Trả lời — Focus vào pitfalls, không phải basics</div>
+      <div class="answer-text">
+        <p>Async/Await nhìn "sạch" hơn callback hell, nhưng ẩn chứa <strong>nhiều pitfalls mà junior hay mắc</strong>. Senior cần biết: <strong>sequential vs parallel execution</strong>, <strong>unhandled rejection crashing Node 15+</strong>, và <strong>async forEach không hoạt động như mong đợi</strong>.</p>
+      </div>
       <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Pitfall 1: await tuần tự khi có thể parallel ──</span>
 <span class="cm">// BAD: 300ms total (100 + 100 + 100ms)</span>
 const user    = await getUser(id);
@@ -2091,6 +2095,14 @@ const withTimeout = &lt;T&gt;(promise: Promise&lt;T&gt;, ms: number): Promise&lt
         <li><strong>Promise.race</strong>: resolve/reject ngay khi cái đầu tiên settle — dùng cho timeout pattern.</li>
         <li><strong>Promise.any</strong>: resolve ngay khi cái đầu tiên resolve, reject khi TẤT CẢ reject — dùng cho fallback pattern.</li>
       </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Bẫy hay gặp</div>
+        <p><strong>Top-level await</strong> chỉ hoạt động trong ES Modules (<code>"type": "module"</code> trong package.json hoặc file <code>.mjs</code>). Trong CommonJS, top-level await sẽ <strong>syntax error</strong>. NestJS mặc định dùng CommonJS — cần wrap trong async IIFE hoặc dùng <code>bootstrap()</code> function.</p>
+      </div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Câu trả lời gây ấn tượng</div>
+        <p>"Trong production, mình luôn dùng <code>Promise.allSettled</code> thay vì <code>Promise.all</code> khi partial failure acceptable — ví dụ gửi notification cho 100 users, không nên fail toàn bộ vì 1 user. Và dùng <code>AbortController</code> thay vì Promise.race timeout để cleanup resources properly."</p>
+      </div>
     </div>
   </div>
 
@@ -2251,6 +2263,9 @@ export class LoggingInterceptor implements NestInterceptor {
     </div>
     <div class="q-body">
       <div class="ans-label">AOP: tách cross-cutting concern khỏi business logic</div>
+      <div class="answer-text">
+        <p><strong>AOP (Aspect-Oriented Programming)</strong> cho phép tách cross-cutting concerns (caching, logging, transaction) ra khỏi business logic. Trong NestJS, <strong>Interceptor là cách chính để implement AOP</strong> — wrap toàn bộ handler execution với pre/post logic qua RxJS Observable.</p>
+      </div>
       <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Cache Interceptor với custom TTL decorator ──</span>
 export const CacheTTL = (ttl: number) =&gt; SetMetadata("cache_ttl", ttl);
 export const CacheKey = (key: string) =&gt; SetMetadata("cache_key", key);
@@ -2303,6 +2318,11 @@ export class TransactionInterceptor implements NestInterceptor {
 }
 <span class="cm">// @UseInterceptors(TransactionInterceptor) — handler không biết transaction</span>
 <span class="cm">// Repository nhận queryRunner từ request để dùng chung transaction</span></div></div>
+      <div class="key-points"><ul>
+        <li><strong>Cache Interceptor</strong>: chỉ cache GET request, dùng custom <code>@CacheTTL()</code> và <code>@CacheKey()</code> decorators để control per-endpoint.</li>
+        <li><strong>Transaction Interceptor</strong>: wrap handler trong DB transaction — tự commit khi success, rollback khi error. Handler không biết transaction tồn tại (SRP).</li>
+        <li><strong>RxJS operators</strong>: <code>tap</code> (side-effect), <code>map</code> (transform), <code>catchError</code> (handle error), <code>finalize</code> (cleanup) — nắm vững 4 operators này là đủ cho mọi interceptor.</li>
+      </ul></div>
       <div class="tip-box">
         <div class="tip-box-title">💡 Tại sao interceptor, không phải middleware?</div>
         <p>Middleware không có access vào Reflect metadata (TTL, cache key) và không wrap response stream. Interceptor có <strong>cả hai</strong>: đọc decorator metadata qua Reflector và control toàn bộ request-response pipeline qua RxJS Observable.</p>
@@ -2390,6 +2410,10 @@ export class OrderService implements OnModuleInit {
       <span class="q-toggle">+</span>
     </div>
     <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>NestJS hỗ trợ RabbitMQ qua <code>@nestjs/microservices</code>. Điểm khác biệt chính: <strong>MessagePattern</strong> (RPC — request/reply, có response) vs <strong>EventPattern</strong> (fire-and-forget, không có response). Trong production, <strong>luôn dùng manual ACK</strong> để tránh mất message khi service crash.</p>
+      </div>
       <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Event Pattern với manual ACK + DLQ ──</span>
 @EventPattern("order.created")
 async handleOrderCreated(
@@ -2434,6 +2458,10 @@ app.connectMicroservice&lt;MicroserviceOptions&gt;({
         <li><strong>prefetchCount</strong>: giới hạn số messages consumer nhận cùng lúc — backpressure, tránh OOM.</li>
         <li><strong>x-death header</strong>: RabbitMQ tự track số lần message bị nack/expired — dùng để implement retry limit.</li>
       </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ MessagePattern vs EventPattern — đừng nhầm lẫn</div>
+        <p><strong>MessagePattern</strong>: Request-Reply — client <code>send()</code> và <strong>chờ response</strong>. Dùng cho sync operations (get user, validate). <strong>EventPattern</strong>: Fire-and-forget — client <code>emit()</code> và <strong>không chờ</strong>. Dùng cho async events (order.created, email.send). Nhầm sẽ gây timeout hoặc mất response.</p>
+      </div>
     </div>
   </div>
 
@@ -2524,6 +2552,10 @@ export class GqlAuthGuard extends AuthGuard("jwt") {
       <span class="q-toggle">+</span>
     </div>
     <div class="q-body">
+      <div class="ans-label">Trả lời — Domain-Driven Design trong NestJS</div>
+      <div class="answer-text">
+        <p><strong>DDD trong NestJS</strong> tận dụng <code>@nestjs/cqrs</code> module. <strong>Aggregate Root</strong> là boundary cho consistency — tất cả thay đổi state phải đi qua aggregate root. <strong>Domain Events</strong> decouple side-effects (gửi email, update inventory) khỏi core logic. <strong>CQRS</strong> tách Command (write) và Query (read) để optimize độc lập.</p>
+      </div>
       <div class="code-block"><div class="code-block-inner"><span class="cm">// ── Aggregate Root với Domain Events (NestJS CQRS) ──</span>
 export class Order extends AggregateRoot {
   private constructor(
@@ -2578,6 +2610,10 @@ export class OrderCreatedHandler implements IEventHandler&lt;OrderCreatedEvent&g
         <li><strong>CQRS</strong>: Command (write) và Query (read) tách biệt — Command Handler thay đổi state, Query Handler đọc data (có thể từ read model khác).</li>
         <li><strong>Domain Event vs Application Event</strong>: Domain Event thuộc domain layer (không import framework). Application Event là NestJS EventEmitter — infrastructure.</li>
       </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Khi nào dùng CQRS trong NestJS?</div>
+        <p>CQRS có overhead (command bus, event bus, handlers) — <strong>chỉ dùng khi domain phức tạp</strong>: nhiều side-effects sau mỗi action, cần event sourcing, hoặc read/write model khác nhau (ví dụ: write vào PostgreSQL, read từ Elasticsearch). CRUD app đơn giản thì <strong>service layer là đủ</strong>.</p>
+      </div>
     </div>
   </div>
 
@@ -2590,6 +2626,9 @@ export class OrderCreatedHandler implements IEventHandler&lt;OrderCreatedEvent&g
     </div>
     <div class="q-body">
       <div class="ans-label">3 cấp độ testing production</div>
+      <div class="answer-text">
+        <p>Testing trong NestJS chia 3 cấp độ: <strong>Unit test</strong> (test domain logic, mock dependencies, chạy cực nhanh), <strong>Integration test</strong> (test với real DB qua TestContainers), và <strong>E2E test</strong> (test full HTTP/GraphQL flow). Tỷ lệ khuyến nghị: <strong>70% Unit, 20% Integration, 10% E2E</strong>.</p>
+      </div>
       <div class="code-block"><div class="code-block-inner"><span class="cm">// ── 1. Unit Test: use-case với mock ──</span>
 describe("CreateOrderHandler", () =&gt; {
   let handler: CreateOrderHandler;
@@ -2663,6 +2702,14 @@ describe("OrderResolver (e2e)", () =&gt; {
         <li><strong>Integration test</strong>: test repository với real Postgres qua TestContainers — đảm bảo schema và query đúng.</li>
         <li><strong>E2E test</strong>: test HTTP/GraphQL flow — cover auth, validation, response format. Ít hơn nhưng high-value.</li>
       </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 TestContainers — game changer cho integration test</div>
+        <p>TestContainers spin up real PostgreSQL/Redis/RabbitMQ Docker container cho mỗi test suite — <strong>không cần mock DB</strong>, test với real schema và migrations. Chậm hơn unit test (~2-5s startup) nhưng đảm bảo query, constraint, và migration đúng. Dùng <code>beforeAll</code> để start container một lần cho cả suite.</p>
+      </div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Testing pitfall với NestJS DI</div>
+        <p><code>Test.createTestingModule()</code> tạo NestJS DI container riêng — mỗi test file có container độc lập. <strong>Đừng dùng <code>module.get()</code> trước <code>.compile()</code></strong> — providers chưa được resolve. Và luôn <code>overrideProvider()</code> cho external dependencies (DB, Redis, HTTP) trong E2E test.</p>
+      </div>
     </div>
   </div>
 
