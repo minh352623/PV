@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Prep — Golang · Database · Message Broker · Architecture · Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8df;
+  --bg3: #e5dfd4;
+  --ink: #1a1612;
+  --ink2: #3d3530;
+  --ink3: #6b5e55;
+  --ink4: #9c8e87;
+  --go: #00acd7;
+  --go-bg: rgba(0,172,215,0.08);
+  --go-border: rgba(0,172,215,0.25);
+  --db: #336791;
+  --db-bg: rgba(51,103,145,0.08);
+  --db-border: rgba(51,103,145,0.25);
+  --kafka: #e85d04;
+  --kafka-bg: rgba(232,93,4,0.08);
+  --kafka-border: rgba(232,93,4,0.25);
+  --green: #2d6a4f;
+  --green-bg: rgba(45,106,79,0.08);
+  --red: #ae2012;
+  --yellow: #7b5e00;
+  --yellow-bg: rgba(123,94,0,0.1);
+  --shadow: 0 2px 12px rgba(26,22,18,0.08);
+  --shadow-lg: 0 8px 32px rgba(26,22,18,0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* ─── NOISE TEXTURE ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── HEADER ─── */
+.masthead {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 52px 48px 44px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--go), var(--db), var(--kafka));
+}
+.masthead-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 18px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.masthead-eyebrow::before {
+  content: '';
+  width: 32px; height: 1px;
+  background: var(--ink4);
+}
+.masthead h1 {
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -2px;
+  margin-bottom: 16px;
+}
+.masthead h1 em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ink4);
+}
+.masthead-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink3);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.pill {
+  padding: 4px 12px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.pill.go { background: var(--go); color: #fff; }
+.pill.db { background: var(--db); color: #fff; }
+.pill.kafka { background: var(--kafka); color: #fff; }
+
+/* ─── NAV TABS ─── */
+.nav-tabs {
+  display: flex;
+  background: var(--ink);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 0 48px;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.tab-btn {
+  padding: 14px 24px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+  top: 1px;
+}
+.tab-btn:hover { color: var(--bg); }
+.tab-btn.active { color: var(--bg); }
+.tab-btn.active.go-tab { border-bottom-color: var(--go); }
+.tab-btn.active.db-tab { border-bottom-color: var(--db); }
+.tab-btn.active.kafka-tab { border-bottom-color: var(--kafka); }
+
+/* ─── MAIN CONTENT ─── */
+.content-area {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 48px;
+}
+
+.section { display: none; }
+.section.active { display: block; }
+
+/* ─── SECTION HEADER ─── */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--bg3);
+}
+.section-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 2px;
+}
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* ─── QUESTION CARD ─── */
+.q-card {
+  background: #fff;
+  border: 1px solid var(--bg3);
+  border-radius: 4px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.q-card:hover { box-shadow: var(--shadow-lg); }
+
+.q-header {
+  padding: 20px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  user-select: none;
+}
+.q-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  min-width: 28px;
+  padding-top: 3px;
+  letter-spacing: 1px;
+}
+.q-text {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.q-level {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.q-level.easy { background: var(--green-bg); color: var(--green); border: 1px solid rgba(45,106,79,0.2); }
+.q-level.med { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(123,94,0,0.2); }
+.q-level.hard { background: rgba(174,32,18,0.08); color: var(--red); border: 1px solid rgba(174,32,18,0.2); }
+.q-toggle {
+  color: var(--ink4);
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: transform 0.25s;
+  padding-top: 2px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.q-card.open .q-toggle { transform: rotate(45deg); }
+
+.q-body {
+  display: none;
+  padding: 0 24px 24px 68px;
+  border-top: 1px solid var(--bg3);
+}
+.q-card.open .q-body { display: block; }
+
+/* Answer sections */
+.ans-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin: 20px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ans-label::after { content: ''; flex: 1; height: 1px; background: var(--bg3); }
+
+.answer-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink2);
+}
+.answer-text p { margin-bottom: 10px; }
+.answer-text strong { color: var(--ink); font-weight: 700; }
+
+.code-block {
+  background: var(--ink);
+  color: #e8e0d8;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 18px 20px;
+  border-radius: 4px;
+  margin: 14px 0;
+  overflow-x: auto;
+  position: relative;
+}
+.code-block .kw { color: #7ec8e3; }
+.code-block .fn { color: #f4b860; }
+.code-block .cm { color: #6b6358; font-style: italic; }
+.code-block .str { color: #a8d8a8; }
+.code-block .num { color: #f4a261; }
+
+.key-points {
+  background: var(--bg);
+  border-left: 3px solid var(--ink);
+  border-radius: 0 4px 4px 0;
+  padding: 14px 18px;
+  margin: 14px 0;
+}
+.key-points ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.key-points li {
+  font-size: 13px;
+  color: var(--ink2);
+  display: flex;
+  gap: 10px;
+  line-height: 1.5;
+}
+.key-points li::before {
+  content: '→';
+  color: var(--ink4);
+  flex-shrink: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.trap-box {
+  background: rgba(174,32,18,0.05);
+  border: 1px solid rgba(174,32,18,0.15);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 14px 0;
+}
+.trap-box-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--red);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.trap-box p {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.5;
+}
+
+.tip-box {
+  background: var(--green-bg);
+  border: 1px solid rgba(45,106,79,0.2);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 14px 0;
+}
+.tip-box-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.tip-box p {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.5;
+}
+
+/* ─── CATEGORY LABEL ─── */
+.cat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin: 36px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cat-label::before { content: '//'; color: var(--ink4); }
+.cat-label::after { content: ''; flex: 1; height: 1px; background: var(--bg3); }
+
+/* Top border color per section */
+.section-go .q-card { border-top: 2px solid var(--go); }
+.section-db .q-card { border-top: 2px solid var(--db); }
+.section-kafka .q-card { border-top: 2px solid var(--kafka); }
+.section-arch .q-card { border-top: 2px solid var(--arch); }
+.section-eng .q-card { border-top: 2px solid var(--eng); }
+
+/* new tab colors */
+:root {
+  --arch: #7c3aed;
+  --arch-bg: rgba(124,58,237,0.08);
+  --eng: #0f766e;
+  --eng-bg: rgba(15,118,110,0.08);
+}
+.tab-btn.active.arch-tab { border-bottom-color: var(--arch); }
+.tab-btn.active.eng-tab { border-bottom-color: var(--eng); }
+.pill.arch { background: var(--arch); color: #fff; }
+.pill.eng { background: var(--eng); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-eyebrow">Interview Preparation Guide</div>
+  <h1>Backend <em>Interview</em><br>Question Bank</h1>
+  <div class="masthead-sub">
+    <span><span class="pill go">Golang Core</span></span>
+    <span><span class="pill db">Database</span></span>
+    <span><span class="pill kafka">Message Broker</span></span>
+    <span><span class="pill arch">Architecture & Security</span></span>
+    <span><span class="pill eng">Engineering Process</span></span>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <button class="tab-btn go-tab active" onclick="switchTab('go', this)">⬡ Golang Core</button>
+  <button class="tab-btn db-tab" onclick="switchTab('db', this)">◫ Database</button>
+  <button class="tab-btn kafka-tab" onclick="switchTab('kafka', this)">⇌ Message Broker</button>
+  <button class="tab-btn arch-tab" onclick="switchTab('arch', this)">◈ Architecture & Security</button>
+  <button class="tab-btn eng-tab" onclick="switchTab('eng', this)">✦ Engineering Process</button>
+</div>
+
+<div class="content-area">
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SECTION: GOLANG -->
+<!-- ══════════════════════════════════════════════════ -->
+<div id="sec-go" class="section active section-go">
+  <div class="section-head">
+    <span class="section-num">01</span>
+    <h2 class="section-title">Golang Core</h2>
+  </div>
+
+  <div class="cat-label">OOP & Language Design</div>
+
+  <!-- Q-inherit-1 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">A1</span>
+      <span class="q-text">Go có Inheritance không? Inheritance là gì? Java có đa kế thừa không, tại sao?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><strong>Inheritance (kế thừa)</strong> là cơ chế trong OOP cho phép class con (subclass) tự động nhận tất cả properties và methods của class cha (superclass). Mục đích: tái sử dụng code, tạo quan hệ "is-a".</p>
+        <p><strong>Go KHÔNG có inheritance</strong>. Thay vào đó Go dùng <strong>Composition (Embedding)</strong> — quan hệ "has-a" thay vì "is-a". Đây là triết lý thiết kế cố ý của Go: <em>"Favor composition over inheritance"</em>.</p>
+      </div>
+      <div class="code-block"><span class="cm">// Go: Composition thay vì Inheritance</span>
+<span class="kw">type</span> Animal <span class="kw">struct</span> {
+    Name <span class="kw">string</span>
+}
+<span class="kw">func</span> (a Animal) <span class="fn">Speak</span>() <span class="kw">string</span> { <span class="kw">return</span> a.Name + <span class="str">" speaks"</span> }
+
+<span class="kw">type</span> Dog <span class="kw">struct</span> {
+    Animal           <span class="cm">// embed — promote Animal methods lên Dog</span>
+    Breed <span class="kw">string</span>
+}
+
+d := Dog{Animal: Animal{Name: <span class="str">"Rex"</span>}, Breed: <span class="str">"Husky"</span>}
+d.<span class="fn">Speak</span>() <span class="cm">// "Rex speaks" — gọi được như inheritance</span>
+d.Name    <span class="cm">// promoted field</span>
+
+<span class="cm">// Dog KHÔNG phải Animal (no "is-a")</span>
+<span class="cm">// Nhưng Dog có behavior của Animal (has-a via embedding)</span></div>
+      <div class="key-points"><ul>
+        <li><strong>Java có đa kế thừa không?</strong> — Java <strong>KHÔNG cho phép đa kế thừa class</strong> (Diamond Problem). Một class chỉ extends được 1 class.</li>
+        <li><strong>Diamond Problem</strong>: nếu A extends B và C, cả B và C đều có method <code>foo()</code>, thì A gọi <code>foo()</code> của ai? Ambiguous → Java cấm.</li>
+        <li>Java <strong>có thể implements nhiều interface</strong> — vì interface không có implementation (trước Java 8), nên không có conflict.</li>
+        <li>Từ Java 8: <code>default method</code> trong interface — nếu conflict thì bắt buộc override.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Câu trả lời senior level</div>
+        <p>"Go chọn composition over inheritance vì inheritance tạo ra tight coupling — thay đổi class cha ảnh hưởng toàn bộ class con. Composition linh hoạt hơn: thay đổi một component không ảnh hưởng component khác. Trong Go, interface + embedding cho phép polymorphism mà không cần inheritance hierarchy."</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q-arch-go -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">A2</span>
+      <span class="q-text">Mô tả kiến trúc Go mà em đã sử dụng trong dự án thực tế?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Cách trả lời — kể journey từ đơn giản đến phức tạp</div>
+      <div class="answer-text">
+        <p>Mình đã dùng <strong>nhiều kiến trúc khác nhau tùy theo quy mô và yêu cầu của từng dự án</strong>. Điều quan trọng là biết <em>khi nào dùng cái gì</em> — không phải mọi dự án đều cần DDD hay Microservices.</p>
+      </div>
+
+      <div class="ans-label">1 — MVC: Khởi điểm đơn giản</div>
+      <div class="answer-text">
+        <p>Với dự án nhỏ hoặc MVP, mình dùng <strong>MVC</strong> — nhanh, dễ onboard, ít boilerplate.</p>
+      </div>
+      <div class="code-block"><span class="cm">// MVC structure — đơn giản, phù hợp team nhỏ / CRUD app</span>
+cmd/main.go
+internal/
+  model/          <span class="cm">// struct + DB mapping (GORM models)</span>
+    user.go
+  controller/     <span class="cm">// nhận request, gọi service, trả response</span>
+    user_ctrl.go
+  service/        <span class="cm">// business logic</span>
+    user_svc.go
+  repository/     <span class="cm">// DB queries</span>
+    user_repo.go
+router/
+  routes.go       <span class="cm">// Gin/Fiber route registration</span></div>
+
+      <div class="ans-label">2 — Clean Architecture + DDD: Khi domain phức tạp</div>
+      <div class="answer-text">
+        <p>Khi business logic phức tạp hơn, cần test tốt hơn, mình chuyển sang <strong>Clean Architecture kết hợp DDD concepts</strong>. Dependency rule: phụ thuộc chỉ đi từ ngoài vào trong.</p>
+      </div>
+      <div class="code-block"><span class="cm">// Clean Architecture — dependency rule: outer → inner only</span>
+internal/
+  domain/                    <span class="cm">// ← CORE: zero external dependencies</span>
+    entity/
+      user.go                <span class="cm">// business entity + domain rules</span>
+      video.go
+    valueobject/
+      email.go               <span class="cm">// DDD value object: immutable, validated</span>
+    repository/              <span class="cm">// interfaces ONLY — no impl here</span>
+      user_repository.go
+    usecase/                 <span class="cm">// orchestrate domain objects</span>
+      create_user.go
+      get_feed.go
+  infrastructure/            <span class="cm">// ← OUTER: implements domain interfaces</span>
+    postgres/
+      user_pg_repo.go        <span class="cm">// UserRepository interface → Postgres</span>
+    redis/
+      feed_cache.go          <span class="cm">// FeedCache interface → Redis</span>
+    clickhouse/
+      event_repo.go          <span class="cm">// EventRepository → ClickHouse</span>
+    mongodb/
+      content_repo.go        <span class="cm">// ContentRepository → MongoDB</span>
+  delivery/
+    http/
+      user_handler.go        <span class="cm">// parse request → call usecase → format resp</span>
+    grpc/
+      recommendation_svc.go  <span class="cm">// gRPC handler for AI service</span>
+pkg/
+  middleware/                <span class="cm">// auth, rate limit, logging</span>
+  config/                    <span class="cm">// viper config loading</span>
+
+<span class="cm">// DDD Concepts applied:</span>
+<span class="cm">// Entity: User{ID, Email, ...} — có identity, có thể thay đổi</span>
+<span class="cm">// Value Object: Email{value} — immutable, defined by value</span>
+<span class="cm">// Aggregate: Order chứa OrderItems — consistency boundary</span>
+<span class="cm">// Repository: interface để persist/retrieve aggregates</span>
+<span class="cm">// Usecase = Application Service: orchestrate domain objects</span></div>
+
+      <div class="ans-label">3 — Microservices: Khi scale team và độc lập deployment</div>
+      <div class="answer-text">
+        <p>Khi team lớn hơn và cần deploy độc lập từng service, mình áp dụng <strong>Microservices</strong>. Mỗi service là một Go binary riêng với DB riêng (Database per Service pattern).</p>
+      </div>
+      <div class="code-block"><span class="cm">// Microservices layout thực tế</span>
+services/
+  user-service/             <span class="cm">// owns: PostgreSQL users table</span>
+    cmd/main.go
+    internal/...            <span class="cm">// Clean Architecture bên trong</span>
+  video-service/            <span class="cm">// owns: PostgreSQL videos + MongoDB content</span>
+    cmd/main.go
+    internal/...
+  recommendation-service/   <span class="cm">// owns: Redis pool + ClickHouse reads</span>
+    cmd/main.go
+    internal/...
+  notification-service/     <span class="cm">// consumes events from Kafka/RabbitMQ</span>
+
+shared/
+  proto/                    <span class="cm">// gRPC proto definitions (shared contract)</span>
+  events/                   <span class="cm">// Kafka event schema (shared)</span>
+
+<span class="cm">// Communication patterns:</span>
+<span class="cm">// Sync:  gRPC (internal service-to-service)</span>
+<span class="cm">// Async: Kafka / RabbitMQ (event-driven)</span>
+<span class="cm">// External: REST API qua API Gateway</span></div>
+
+      <div class="key-points"><ul>
+        <li><strong>MVC</strong>: dùng khi team nhỏ, CRUD app, cần ship nhanh. Ít abstraction, dễ đọc với junior.</li>
+        <li><strong>Clean Architecture + DDD</strong>: dùng khi domain phức tạp, cần testability cao, team muốn isolate business logic khỏi infrastructure.</li>
+        <li><strong>Microservices</strong>: dùng khi cần scale độc lập, team lớn (2-pizza rule), deployment frequency cao. <strong>Không nên áp dụng sớm</strong> — overhead lớn.</li>
+        <li><strong>Nguyên tắc chọn</strong>: bắt đầu từ Monolith với Clean Architecture, sau đó tách dần thành Microservices khi thực sự cần.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Câu trả lời gây ấn tượng mạnh với interviewer</div>
+        <p>"Mình không áp dụng một kiến trúc cố định cho mọi dự án. Microservices giải quyết vấn đề về scaling và team independence, nhưng đổi lại là distributed system complexity — network latency, distributed transactions, observability. Mình chọn kiến trúc dựa trên <strong>team size, domain complexity, và scaling requirements</strong> — không phải vì nó 'trend'."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Concurrency</div>
+
+  <!-- Q1 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">01</span>
+      <span class="q-text">Goroutine khác Thread như thế nào? Tại sao Goroutine nhẹ hơn?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Goroutine là <strong>lightweight thread được quản lý bởi Go runtime</strong>, không phải OS thread. Sự khác biệt chính:</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Stack size</strong>: Goroutine bắt đầu với ~2KB stack, tự động grow/shrink. OS thread cố định 1–8MB.</li>
+        <li><strong>Scheduling</strong>: Go dùng M:N scheduler (nhiều goroutines map lên ít OS threads). OS thread dùng preemptive scheduling của kernel — tốn context switch.</li>
+        <li><strong>Context switch</strong>: Goroutine switch trong user-space (~100ns). OS thread switch qua kernel (~1–10µs).</li>
+        <li><strong>Creation cost</strong>: Spawn 1 goroutine rẻ hơn rất nhiều — có thể chạy hàng triệu goroutines.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Điểm cộng khi trả lời</div>
+        <p>Đề cập đến <strong>GOMAXPROCS</strong>: số OS threads chạy song song = số CPU cores. Và <strong>work-stealing scheduler</strong>: goroutine idle sẽ bị "steal" bởi thread khác để tận dụng CPU.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">02</span>
+      <span class="q-text">Channel buffered vs unbuffered khác nhau thế nào? Khi nào dùng cái nào?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><strong>Unbuffered</strong>: sender block cho đến khi receiver sẵn sàng nhận — đồng bộ hoàn toàn (rendezvous).</p>
+        <p><strong>Buffered</strong>: sender chỉ block khi buffer đầy — có thể gửi trước khi receiver nhận.</p>
+      </div>
+      <div class="code-block"><span class="cm">// Unbuffered — sync</span>
+ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">int</span>)        <span class="cm">// block until recv</span>
+
+<span class="cm">// Buffered — async up to capacity</span>
+ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">int</span>, <span class="num">10</span>)    <span class="cm">// block only when full</span></div>
+      <div class="key-points"><ul>
+        <li><strong>Unbuffered</strong>: dùng khi cần guarantee "message đã được nhận" trước khi tiếp tục. Ví dụ: signal done, handshake.</li>
+        <li><strong>Buffered</strong>: dùng khi producer nhanh hơn consumer, muốn giảm blocking. Ví dụ: job queue, event pipeline.</li>
+        <li>Đừng dùng buffered để "fix" race condition — đó là che giấu bug.</li>
+      </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Bẫy hay gặp</div>
+        <p>Gửi vào closed channel → <strong>panic</strong>. Nhận từ closed channel → trả về zero value + <code>ok=false</code>. Interviewer hay hỏi: "Ai nên close channel?" — Quy tắc: <strong>sender close, không phải receiver</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">03</span>
+      <span class="q-text">sync.Mutex vs sync.RWMutex — khi nào dùng gì? Race condition là gì?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><strong>Race condition</strong>: xảy ra khi 2+ goroutines đọc/ghi cùng một biến mà không có synchronization. Kết quả không deterministic.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Mutex</strong>: Lock exclusive — chỉ 1 goroutine vào critical section tại một thời điểm (đọc hoặc ghi).</li>
+        <li><strong>RWMutex</strong>: Nhiều goroutines có thể <strong>RLock</strong> (read) đồng thời, nhưng <strong>Lock</strong> (write) thì exclusive. Tốt khi read nhiều, write ít.</li>
+      </ul></div>
+      <div class="code-block"><span class="kw">var</span> mu sync.RWMutex
+<span class="kw">var</span> cache = <span class="fn">make</span>(<span class="kw">map</span>[<span class="kw">string</span>]<span class="kw">string</span>)
+
+<span class="cm">// Nhiều goroutine read cùng lúc OK</span>
+<span class="kw">func</span> <span class="fn">Get</span>(key <span class="kw">string</span>) <span class="kw">string</span> {
+    mu.<span class="fn">RLock</span>(); <span class="kw">defer</span> mu.<span class="fn">RUnlock</span>()
+    <span class="kw">return</span> cache[key]
+}
+
+<span class="cm">// Write phải exclusive</span>
+<span class="kw">func</span> <span class="fn">Set</span>(key, val <span class="kw">string</span>) {
+    mu.<span class="fn">Lock</span>(); <span class="kw">defer</span> mu.<span class="fn">Unlock</span>()
+    cache[key] = val
+}</div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Bonus</div>
+        <p>Mention <strong>go run -race</strong> để detect race condition. Interviewer sẽ rất ấn tượng nếu bạn biết tool này.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">04</span>
+      <span class="q-text">Context trong Go dùng để làm gì? cancel, timeout, deadline khác nhau ra sao?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Context dùng để <strong>truyền signal hủy, timeout, và metadata</strong> qua call chain. Đặc biệt quan trọng trong concurrent code và HTTP handlers.</p>
+      </div>
+      <div class="code-block"><span class="cm">// WithCancel — manually cancel</span>
+ctx, cancel := context.<span class="fn">WithCancel</span>(context.<span class="fn">Background</span>())
+<span class="kw">defer</span> <span class="fn">cancel</span>() <span class="cm">// luôn defer cancel để tránh leak</span>
+
+<span class="cm">// WithTimeout — auto cancel sau duration</span>
+ctx, cancel := context.<span class="fn">WithTimeout</span>(context.<span class="fn">Background</span>(), <span class="num">5</span>*time.Second)
+
+<span class="cm">// WithDeadline — cancel tại thời điểm cụ thể</span>
+ctx, cancel := context.<span class="fn">WithDeadline</span>(context.<span class="fn">Background</span>(), deadline)
+
+<span class="cm">// Check trong goroutine</span>
+<span class="kw">select</span> {
+<span class="kw">case</span> &lt;-ctx.<span class="fn">Done</span>():
+    <span class="kw">return</span> ctx.<span class="fn">Err</span>() <span class="cm">// context.Canceled hoặc DeadlineExceeded</span>
+<span class="kw">case</span> result := &lt;-doWork():
+    <span class="kw">return</span> result
+}</div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Bẫy hay gặp</div>
+        <p>Quên <code>defer cancel()</code> → <strong>goroutine leak</strong>. Context không thể cancel parent — chỉ cancel down the tree. Không store context trong struct, luôn pass qua function parameter.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Memory & Runtime</div>
+
+  <!-- Q5 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">05</span>
+      <span class="q-text">Heap vs Stack allocation trong Go. Escape Analysis là gì?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><strong>Stack</strong>: nhanh, tự động deallocate khi function return. <strong>Heap</strong>: chậm hơn, cần GC dọn dẹp.</p>
+        <p><strong>Escape Analysis</strong>: compiler phân tích xem variable có "thoát" ra ngoài function scope không. Nếu có → allocate heap. Nếu không → stack.</p>
+      </div>
+      <div class="code-block"><span class="cm">// Stack — không escape</span>
+<span class="kw">func</span> <span class="fn">foo</span>() <span class="kw">int</span> {
+    x := <span class="num">42</span>    <span class="cm">// x trên stack, mất khi foo() return</span>
+    <span class="kw">return</span> x
+}
+
+<span class="cm">// Heap — escape vì return pointer</span>
+<span class="kw">func</span> <span class="fn">bar</span>() *<span class="kw">int</span> {
+    x := <span class="num">42</span>    <span class="cm">// x escape to heap</span>
+    <span class="kw">return</span> &amp;x
+}
+
+<span class="cm">// Xem escape analysis:</span>
+<span class="cm">// go build -gcflags="-m" .</span></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Điểm cộng</div>
+        <p>Interface{} thường gây escape to heap vì compiler không biết type lúc compile. Dùng <strong>sync.Pool</strong> để tái sử dụng objects, giảm GC pressure.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">06</span>
+      <span class="q-text">Interface trong Go hoạt động thế nào? Duck typing là gì?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Go dùng <strong>implicit interface implementation</strong> — không cần khai báo <code>implements</code>. Nếu type có đủ methods của interface → tự động implement. Đây là Duck Typing: <em>"nếu nó đi như vịt và kêu như vịt, thì nó là vịt."</em></p>
+      </div>
+      <div class="code-block"><span class="kw">type</span> Writer <span class="kw">interface</span> {
+    <span class="fn">Write</span>(p []<span class="kw">byte</span>) (n <span class="kw">int</span>, err <span class="kw">error</span>)
+}
+
+<span class="cm">// FileWriter tự động implement Writer</span>
+<span class="cm">// mà không cần "implements Writer"</span>
+<span class="kw">type</span> FileWriter <span class="kw">struct</span>{}
+<span class="kw">func</span> (f FileWriter) <span class="fn">Write</span>(p []<span class="kw">byte</span>) (<span class="kw">int</span>, <span class="kw">error</span>) {
+    <span class="cm">// ...</span>
+    <span class="kw">return</span> <span class="fn">len</span>(p), <span class="kw">nil</span>
+}</div>
+      <div class="key-points"><ul>
+        <li>Interface value = (type, value) pair — nil interface khác nil pointer trong interface.</li>
+        <li>Empty interface <code>interface{}</code> / <code>any</code> accept mọi type.</li>
+        <li>Type assertion: <code>v, ok := i.(ConcreteType)</code> — luôn dùng two-value form để tránh panic.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="cat-label">Error Handling & Patterns</div>
+
+  <!-- Q7 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">07</span>
+      <span class="q-text">Error handling trong Go. Wrap error và errors.Is / errors.As dùng khi nào?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Go không có try/catch. Error là value, return cùng với result. Pattern chuẩn: <strong>handle error ngay, không ignore.</strong></p>
+      </div>
+      <div class="code-block"><span class="kw">import</span> <span class="str">"fmt"</span>
+
+<span class="cm">// Wrap để thêm context</span>
+<span class="kw">func</span> <span class="fn">getUser</span>(id <span class="kw">int</span>) (*User, <span class="kw">error</span>) {
+    u, err := db.<span class="fn">QueryUser</span>(id)
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        <span class="kw">return</span> <span class="kw">nil</span>, fmt.<span class="fn">Errorf</span>(<span class="str">"getUser %d: %w"</span>, id, err) <span class="cm">// %w wraps</span>
+    }
+    <span class="kw">return</span> u, <span class="kw">nil</span>
+}
+
+<span class="cm">// errors.Is — check error chain (sentinel errors)</span>
+<span class="kw">if</span> errors.<span class="fn">Is</span>(err, sql.ErrNoRows) { ... }
+
+<span class="cm">// errors.As — extract specific error type</span>
+<span class="kw">var</span> pgErr *pgconn.PgError
+<span class="kw">if</span> errors.<span class="fn">As</span>(err, &amp;pgErr) {
+    fmt.<span class="fn">Println</span>(pgErr.Code) <span class="cm">// postgres error code</span>
+}</div>
+      <div class="key-points"><ul>
+        <li><code>errors.Is</code>: so sánh theo giá trị, traverse error chain qua <code>Unwrap()</code>.</li>
+        <li><code>errors.As</code>: check type trong chain, extract để access fields.</li>
+        <li>Sentinel error: <code>var ErrNotFound = errors.New("not found")</code> — define ở package level.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">08</span>
+      <span class="q-text">Worker Pool pattern trong Go. Tại sao cần giới hạn số goroutine?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Spawn goroutine không giới hạn → OOM khi load cao. Worker pool giới hạn concurrency, tái sử dụng goroutines.</p>
+      </div>
+      <div class="code-block"><span class="kw">func</span> <span class="fn">workerPool</span>(jobs &lt;-<span class="kw">chan</span> Job, numWorkers <span class="kw">int</span>) {
+    <span class="kw">var</span> wg sync.WaitGroup
+    
+    <span class="kw">for</span> i := <span class="num">0</span>; i &lt; numWorkers; i++ {
+        wg.<span class="fn">Add</span>(<span class="num">1</span>)
+        <span class="kw">go func</span>() {
+            <span class="kw">defer</span> wg.<span class="fn">Done</span>()
+            <span class="kw">for</span> job := <span class="kw">range</span> jobs { <span class="cm">// range closes when channel closed</span>
+                job.<span class="fn">Process</span>()
+            }
+        }()
+    }
+    
+    wg.<span class="fn">Wait</span>()
+}
+
+<span class="cm">// Gửi jobs</span>
+jobs := <span class="fn">make</span>(<span class="kw">chan</span> Job, <span class="num">100</span>)
+<span class="kw">go</span> <span class="fn">workerPool</span>(jobs, <span class="num">10</span>) <span class="cm">// chỉ 10 goroutines</span>
+<span class="kw">for</span> _, j := <span class="kw">range</span> allJobs { jobs &lt;- j }
+<span class="fn">close</span>(jobs) <span class="cm">// signal workers to stop</span></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Real-world usage</div>
+        <p>Dùng semaphore pattern với buffered channel: <code>sem := make(chan struct{}, 10)</code>. Acquire: <code>sem &lt;- struct{}{}</code>. Release: <code>&lt;-sem</code>. Hoặc dùng <strong>golang.org/x/sync/semaphore</strong>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SECTION: DATABASE -->
+<!-- ══════════════════════════════════════════════════ -->
+<div id="sec-db" class="section section-db">
+  <div class="section-head">
+    <span class="section-num">02</span>
+    <h2 class="section-title">Database</h2>
+  </div>
+
+  <div class="cat-label">Index & Query Optimization</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">01</span>
+      <span class="q-text">Index hoạt động như thế nào? B-Tree index vs Hash index?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Index là <strong>data structure phụ</strong> giúp database tìm rows nhanh mà không phải full table scan (O(n) → O(log n)).</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>B-Tree</strong> (default PostgreSQL): balanced tree, hỗ trợ range query (<code>&gt;</code>, <code>&lt;</code>, <code>BETWEEN</code>, <code>ORDER BY</code>). Phù hợp cho hầu hết use case.</li>
+        <li><strong>Hash index</strong>: O(1) lookup nhưng <strong>chỉ hỗ trợ equality</strong> (<code>=</code>). Không dùng được cho range query.</li>
+        <li><strong>GIN index</strong>: cho array, JSONB, full-text search. Trong document của bạn dùng cho <code>tags TEXT[]</code>.</li>
+        <li><strong>BRIN</strong>: cho dữ liệu có correlation với vị trí vật lý (timestamp tăng dần). Rất nhỏ, phù hợp time-series.</li>
+      </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Bẫy hay gặp</div>
+        <p>Index trên column với low cardinality (boolean, gender) thường không hiệu quả — DB optimizer có thể bỏ qua. Index cũng <strong>làm chậm INSERT/UPDATE</strong> vì phải maintain.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">02</span>
+      <span class="q-text">EXPLAIN ANALYZE đọc như thế nào? Seq Scan vs Index Scan?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><code>EXPLAIN ANALYZE</code> thực thi query và trả về execution plan với actual time. Đây là công cụ quan trọng nhất để optimize query.</p>
+      </div>
+      <div class="code-block">EXPLAIN ANALYZE
+SELECT * FROM watch_sessions
+WHERE user_id = <span class="str">'user_123'</span>
+AND started_at > NOW() - INTERVAL <span class="str">'30 days'</span>;
+
+<span class="cm">-- Output đọc từ trong ra ngoài (indented = inner first)</span>
+<span class="cm">-- Seq Scan: đọc toàn bộ bảng → BAD nếu bảng lớn</span>
+<span class="cm">-- Index Scan: dùng index → GOOD</span>
+<span class="cm">-- Index Only Scan: chỉ đọc index, không đụng table → BEST</span>
+<span class="cm">-- Bitmap Heap Scan: kết hợp nhiều index conditions</span>
+
+<span class="cm">-- Chú ý: actual time=X..Y rows=Z loops=N</span>
+<span class="cm">-- cost=X..Y: estimated, actual time: thực tế</span></div>
+      <div class="key-points"><ul>
+        <li>Tìm node có <strong>actual time cao nhất</strong> — đó là bottleneck.</li>
+        <li><strong>rows estimated vs actual</strong> lệch nhiều → cần <code>ANALYZE</code> để update statistics.</li>
+        <li>Nested Loop Join tốt khi dataset nhỏ. Hash Join tốt cho large dataset.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="cat-label">Transaction & ACID</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">03</span>
+      <span class="q-text">ACID là gì? Isolation levels — đọc dirty data, phantom read xảy ra khi nào?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><strong>ACID</strong>: Atomicity (all or nothing), Consistency (constraints không bị vi phạm), Isolation (transactions không thấy nhau), Durability (commit thì persist dù crash).</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Read Uncommitted</strong>: thấy uncommitted data của tx khác → <em>Dirty Read</em>. Hầu như không dùng.</li>
+        <li><strong>Read Committed</strong> (PostgreSQL default): chỉ thấy committed data, nhưng có thể thấy giá trị khác nhau trong cùng tx → <em>Non-repeatable Read</em>.</li>
+        <li><strong>Repeatable Read</strong>: snapshot consistent, nhưng có thể thấy rows mới được insert → <em>Phantom Read</em>.</li>
+        <li><strong>Serializable</strong>: hoàn toàn isolated, như chạy serial. Chậm nhất nhưng safe nhất.</li>
+      </ul></div>
+      <div class="code-block"><span class="cm">-- PostgreSQL default: Read Committed</span>
+BEGIN;
+SELECT balance FROM accounts WHERE id = 1;  <span class="cm">-- 100</span>
+<span class="cm">-- tx khác UPDATE và COMMIT ở đây</span>
+SELECT balance FROM accounts WHERE id = 1;  <span class="cm">-- 90 (non-repeatable read!)</span>
+COMMIT;
+
+<span class="cm">-- Fix: dùng Repeatable Read</span>
+BEGIN ISOLATION LEVEL REPEATABLE READ;
+<span class="cm">-- Bây giờ cả 2 SELECT đều trả về 100</span></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Thực tế</div>
+        <p>PostgreSQL implement Repeatable Read bằng MVCC — không có Phantom Read. Serializable dùng SSI (Serializable Snapshot Isolation) — hiệu năng tốt hơn lock-based.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">04</span>
+      <span class="q-text">Deadlock là gì? Làm sao phòng tránh và detect?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Deadlock xảy ra khi tx A giữ lock mà B cần, B giữ lock mà A cần → cả hai chờ nhau mãi mãi.</p>
+      </div>
+      <div class="code-block"><span class="cm">-- Tx A                    -- Tx B</span>
+BEGIN;                    BEGIN;
+UPDATE accounts           UPDATE accounts
+  WHERE id = 1;  <span class="cm">-- lock 1</span>   WHERE id = 2; <span class="cm">-- lock 2</span>
+UPDATE accounts           UPDATE accounts
+  WHERE id = 2;  <span class="cm">-- wait!</span>   WHERE id = 1; <span class="cm">-- wait! DEADLOCK</span></div>
+      <div class="key-points"><ul>
+        <li><strong>Prevention</strong>: luôn lock resources theo thứ tự cố định (id tăng dần). Ví dụ: luôn UPDATE id nhỏ hơn trước.</li>
+        <li><strong>Detection</strong>: PostgreSQL tự detect và kill tx có cost thấp hơn → trả về error <code>40P01</code>.</li>
+        <li><strong>Application level</strong>: retry logic khi nhận deadlock error. Keep transactions short.</li>
+        <li>Log deadlock: <code>log_lock_waits = on</code>, <code>deadlock_timeout = 1s</code>.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="cat-label">Scaling & Architecture</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">05</span>
+      <span class="q-text">Database sharding là gì? Khi nào dùng? Vấn đề gì phát sinh?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Sharding là <strong>horizontal partitioning</strong> — chia data ra nhiều DB servers (shards), mỗi shard giữ một phần data.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Hash sharding</strong>: <code>shard = hash(user_id) % N</code>. Phân bổ đều nhưng khó re-shard.</li>
+        <li><strong>Range sharding</strong>: shard theo range (user_id 1-1M, 1M-2M...). Dễ hotspot nếu traffic không đều.</li>
+        <li><strong>Directory sharding</strong>: lookup table riêng → flexible nhưng lookup table là SPOF.</li>
+      </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Vấn đề phát sinh</div>
+        <p><strong>Cross-shard queries</strong> rất khó — JOIN giữa 2 shards không thể dùng DB level. <strong>Distributed transactions</strong> cần 2PC (two-phase commit) — phức tạp và chậm. <strong>Rebalancing</strong> khi thêm shard = di chuyển data. Xem xét kỹ trước khi shard — thường read replica + caching đủ rồi.</p>
+      </div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Thứ tự scale đúng</div>
+        <p>Index optimization → Query optimization → Connection pooling → Read replicas → Caching (Redis) → Sharding. Sharding là bước cuối cùng, không phải đầu tiên.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">06</span>
+      <span class="q-text">N+1 query problem là gì? Cách fix?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>N+1 xảy ra khi bạn query 1 lần để lấy N records, rồi query thêm N lần cho từng record. Tổng = N+1 queries.</p>
+      </div>
+      <div class="code-block"><span class="cm">// BAD — N+1: 1 query lấy users + N query lấy orders</span>
+users, _ := db.Query(<span class="str">"SELECT * FROM users"</span>)  <span class="cm">// 1</span>
+<span class="kw">for</span> _, u := <span class="kw">range</span> users {
+    orders, _ := db.Query(                          <span class="cm">// N lần!</span>
+        <span class="str">"SELECT * FROM orders WHERE user_id=?"</span>, u.ID)
+}
+
+<span class="cm">// GOOD — JOIN hoặc IN clause</span>
+db.Query(<span class="str">`
+    SELECT u.*, o.* FROM users u
+    LEFT JOIN orders o ON o.user_id = u.id
+`</span>)
+
+<span class="cm">// Hoặc: lấy tất cả user IDs trước, rồi IN query</span>
+db.Query(<span class="str">"SELECT * FROM orders WHERE user_id IN (?)"</span>, userIDs...)</div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Trong ORM</div>
+        <p>GORM dùng <code>Preload</code> hoặc <code>Joins</code> để avoid N+1. Sqlboiler, sqlx cần tự viết. Luôn check SQL log khi dùng ORM để phát hiện N+1.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Schema Design & Normalization</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">07</span>
+      <span class="q-text">Em có ứng dụng Normalization không? Mô tả 1NF, 2NF, 3NF và khi nào nên Denormalize?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><strong>Normalization</strong> là quá trình tổ chức database để loại bỏ data redundancy và đảm bảo data integrity. Chia thành các Normal Forms (NF).</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>1NF (First Normal Form)</strong>: Mỗi cell chứa một giá trị atomic (không phải list/array). Mỗi row là unique. Ví dụ vi phạm: <code>tags = "golang,redis,kafka"</code> trong 1 column → phải tách ra bảng riêng hoặc dùng array type.</li>
+        <li><strong>2NF</strong>: Đạt 1NF + mọi non-key column phụ thuộc vào <em>toàn bộ</em> primary key (không phải một phần). Chỉ áp dụng khi PK là composite key.</li>
+        <li><strong>3NF</strong>: Đạt 2NF + không có transitive dependency — column không được phụ thuộc vào non-key column khác.</li>
+      </ul></div>
+      <div class="code-block"><span class="cm">-- Vi phạm 3NF: customer_city phụ thuộc customer_id, không phải order_id</span>
+orders(order_id, customer_id, customer_name, customer_city)
+
+<span class="cm">-- Sau normalize 3NF: tách thành 2 bảng</span>
+customers(customer_id PK, customer_name, customer_city)
+orders(order_id PK, customer_id FK, amount, created_at)
+<span class="cm">-- Sửa city của customer → chỉ update 1 row trong customers</span>
+<span class="cm">-- Không còn data redundancy hay inconsistency</span></div>
+      <div class="ans-label">Khi nào nên Denormalize?</div>
+      <div class="answer-text">
+        <p>Denormalize khi <strong>read performance quan trọng hơn write consistency</strong> — chấp nhận data redundancy để tránh JOIN phức tạp.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Analytics / Reporting</strong>: ClickHouse lưu <code>watch_sessions</code> với đầy đủ <code>user_id</code>, <code>video_id</code> trực tiếp — không JOIN runtime khi query aggregate.</li>
+        <li><strong>Read-heavy endpoints</strong>: denormalize <code>author_name</code> vào bảng <code>posts</code> nếu 99% query là read, author hiếm khi đổi tên.</li>
+        <li><strong>Đánh đổi</strong>: update phức tạp hơn (phải update nhiều chỗ), data có thể stale nếu không sync kịp.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Quy tắc thực chiến</div>
+        <p>Normalize trước để đảm bảo correctness. Denormalize sau khi có <strong>evidence từ profiling</strong> — đừng denormalize sớm vì "nghĩ là sẽ chậm". Mỗi quyết định denormalize cần document lý do để team hiểu tại sao schema trông "lạ".</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">08</span>
+      <span class="q-text">Em đã từng thiết kế database chưa? Em thiết kế như thế nào? Tại sao chọn database đó?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời — Polyglot Persistence mindset</div>
+      <div class="answer-text">
+        <p>Có. Mình không dùng một loại DB cho tất cả — mỗi loại DB có <strong>strength riêng, phù hợp với access pattern khác nhau</strong>. Quyết định "dùng DB nào" quan trọng không kém thiết kế schema.</p>
+      </div>
+      <div class="ans-label">Decision Framework — khi nào dùng gì</div>
+      <div class="code-block"><span class="cm">// PostgreSQL — transactional, relational, ACID critical</span>
+<span class="cm">// Dùng khi: user data, orders, payments, anything cần FK + constraint</span>
+users(user_id PK, email UNIQUE, created_at, engagement_score)
+videos(video_id PK, creator_id FK, category, tags GIN_INDEX)
+<span class="cm">// Strength: JOIN, transaction, constraint, mature ecosystem</span>
+<span class="cm">// Weakness: không scale write tốt ở very high volume</span>
+
+<span class="cm">// Redis — sub-millisecond, in-memory, data structures phong phú</span>
+<span class="cm">// Dùng khi: cache, session, rate limit, leaderboard, pub/sub</span>
+feed_pool:{user_id}  → LIST    (200 video IDs, TTL 1h)
+session:{user_id}    → STRING  (cursor JSON, TTL 30m)
+rate_limit:{ip}      → STRING  (counter + INCR, TTL 1m)
+leaderboard          → SORTED SET (score → userID)
+<span class="cm">// Strength: cực nhanh &lt;1ms, atomic ops, TTL built-in</span>
+<span class="cm">// Weakness: volatile, không phải primary store, memory giới hạn</span>
+
+<span class="cm">// ClickHouse — columnar analytics, time-series, aggregation</span>
+<span class="cm">// Dùng khi: event tracking, metrics, reporting với billions of rows</span>
+playback_events ENGINE = MergeTree()
+  PARTITION BY toYYYYMM(created_at)
+  ORDER BY (user_id, created_at)
+<span class="cm">// Strength: columnar storage, compression 10x, GROUP BY rất nhanh</span>
+<span class="cm">// Weakness: không phù hợp OLTP, UPDATE/DELETE phức tạp, eventual consistency</span>
+
+<span class="cm">// MongoDB — flexible schema, document-oriented, nested data</span>
+<span class="cm">// Dùng khi: content với schema hay thay đổi, deeply nested objects</span>
+{ "_id": "video_123",
+  "metadata": { "title": "...", "tags": [...] },
+  "captions": [{ "lang": "vi", "url": "..." }],   <span class="cm">// nested, vary per doc</span>
+  "custom_fields": { "platform": "tiktok" } }      <span class="cm">// flexible schema</span>
+<span class="cm">// Strength: flexible schema, horizontal scale (sharding built-in)</span>
+<span class="cm">// Weakness: no JOIN across collections, no multi-doc ACID (trước v4.0)</span></div>
+
+      <div class="ans-label">Quy trình thiết kế schema thực tế</div>
+      <div class="key-points"><ul>
+        <li><strong>1. Xác định access patterns trước</strong>: "Query gì chạy nhiều nhất? Filter gì? Join bảng nào? Read/write ratio?" — Schema phục vụ access pattern, không phải ngược lại.</li>
+        <li><strong>2. Chọn đúng DB type</strong> dựa trên framework ở trên — không dùng PostgreSQL cho mọi thứ.</li>
+        <li><strong>3. Normalize đến 3NF</strong> cho relational DB, sau đó denormalize có chủ đích nếu cần.</li>
+        <li><strong>4. Thiết kế index song song với schema</strong>: composite index cho multi-column WHERE, GIN cho array/JSONB, partial index cho filtered queries.</li>
+        <li><strong>5. Estimate volume và growth</strong>: 1M users × 20 events/day = 20M rows/day → cần partition strategy, TTL policy.</li>
+        <li><strong>6. Migration strategy</strong>: backward-compatible — không DROP COLUMN ngay, rename + deprecate, double-write khi zero-downtime cần thiết.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Câu trả lời tạo điểm nhấn với interviewer</div>
+        <p>"PostgreSQL làm source of truth cho user/video metadata vì cần ACID và FK. Redis cho feed pool và session — sub-millisecond, không cần persistent. ClickHouse cho event analytics — write throughput cao, aggregate query cực nhanh. MongoDB cho content với schema linh hoạt. Mỗi lựa chọn dựa trên <strong>access pattern và consistency requirement</strong> — không phải preference hay trend."</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SECTION: MESSAGE BROKER -->
+<!-- ══════════════════════════════════════════════════ -->
+<div id="sec-kafka" class="section section-kafka">
+  <div class="section-head">
+    <span class="section-num">03</span>
+    <h2 class="section-title">Message Broker</h2>
+  </div>
+
+  <div class="cat-label">Kafka Fundamentals</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">01</span>
+      <span class="q-text">Kafka architecture: Topic, Partition, Consumer Group hoạt động thế nào?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Kafka là <strong>distributed commit log</strong>. Messages được ghi vào topics, consume bởi consumer groups.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Topic</strong>: category/feed tên cho messages. Durable, append-only log.</li>
+        <li><strong>Partition</strong>: topic chia thành N partitions — đơn vị parallelism. Messages trong 1 partition có order guarantee.</li>
+        <li><strong>Consumer Group</strong>: mỗi partition được assign cho đúng 1 consumer trong group. Cho phép scale horizontally. 2 groups đọc cùng topic = 2 lần (broadcast).</li>
+        <li><strong>Offset</strong>: position của consumer trong partition. Consumer tự quản lý offset → có thể re-read.</li>
+      </ul></div>
+      <div class="code-block"><span class="cm">// Rule: consumers trong group ≤ số partitions</span>
+<span class="cm">// 10 partitions + 5 consumers = mỗi consumer 2 partitions</span>
+<span class="cm">// 10 partitions + 10 consumers = mỗi consumer 1 partition  ← optimal</span>
+<span class="cm">// 10 partitions + 15 consumers = 5 consumers idle ← lãng phí</span></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Partition key</div>
+        <p>Messages cùng key → cùng partition → ordered. Ví dụ: key=user_id → mọi event của user đó theo thứ tự. Nếu không set key → round-robin distribution.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">02</span>
+      <span class="q-text">At-least-once vs At-most-once vs Exactly-once delivery. Kafka đảm bảo cái nào?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Đây là câu hỏi cực kỳ phổ biến. Ba delivery semantics:</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>At-most-once</strong>: commit offset trước khi process → nếu crash giữa chừng, message mất. Không có duplicate nhưng có thể mất data. Dùng cho: logs, metrics không quan trọng.</li>
+        <li><strong>At-least-once</strong>: commit offset sau khi process thành công → nếu crash, re-process. Có duplicate nhưng không mất data. Cần <strong>idempotent consumer</strong>. Dùng cho hầu hết use case.</li>
+        <li><strong>Exactly-once</strong>: Kafka hỗ trợ qua Idempotent Producer + Transactional API. Phức tạp và có overhead. Dùng cho financial transactions.</li>
+      </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Idempotent consumer</div>
+        <p>Với at-least-once, consumer phải handle duplicate: dùng unique message ID, check trong DB trước khi process. Ví dụ: <code>INSERT ... ON CONFLICT DO NOTHING</code> với message_id làm unique key.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">03</span>
+      <span class="q-text">Consumer lag là gì? Làm sao monitor và fix khi lag tăng?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p><strong>Consumer lag</strong> = log end offset − consumer committed offset. Nghĩa là: số messages chưa được xử lý. Lag tăng = consumer xử lý chậm hơn producer produce.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Monitor</strong>: <code>kafka-consumer-groups.sh --describe</code> hoặc Kafka UI, Grafana + JMX.</li>
+        <li><strong>Root cause</strong>: consumer xử lý chậm (heavy DB query), downstream service slow, consumer crash/rebalancing liên tục.</li>
+        <li><strong>Fix</strong>: tăng số consumer (thêm instance, tăng partition nếu cần), tối ưu processing logic, tách slow consumer ra topic riêng.</li>
+        <li><strong>Backpressure</strong>: pause consumer khi downstream full, resume khi drain xong.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Trong hệ thống của bạn</div>
+        <p>ClickHouse consumer ghi batch 1000 events → nếu ClickHouse slow hoặc overload, lag tăng. Giải pháp: tăng batch size, dùng async insert của ClickHouse, hoặc thêm consumer instances.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Kafka vs RabbitMQ & Design</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">04</span>
+      <span class="q-text">Kafka vs RabbitMQ — chọn cái nào? Khi nào dùng cái nào?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Đây là câu hỏi phỏng vấn rất phổ biến. Cần so sánh theo use case, không phải "cái nào tốt hơn".</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Kafka</strong>: dùng khi cần high throughput (millions msg/s), retention dài, replay messages, event streaming, multiple consumers đọc cùng data, audit log. <em>Hệ thống của bạn dùng đúng chỗ</em>.</li>
+        <li><strong>RabbitMQ</strong>: dùng khi cần routing phức tạp (exchanges, bindings), task queue (message xong thì xóa), low latency, priority queues, RPC pattern.</li>
+        <li><strong>Kafka KHÔNG phải</strong> task queue tốt — messages không xóa sau khi consumed, không có per-message ACK như RabbitMQ.</li>
+        <li><strong>RabbitMQ KHÔNG tốt</strong> cho event sourcing — không có replay, không có long retention.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Câu trả lời gây ấn tượng</div>
+        <p>"Kafka là log, RabbitMQ là queue. Kafka phù hợp khi bạn muốn nhiều consumer đọc cùng event stream (fan-out). RabbitMQ phù hợp khi có competing consumers cùng xử lý 1 job và message được acknowledge khi xong."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">05</span>
+      <span class="q-text">Kafka replication và acks=all — đảm bảo durability thế nào?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Kafka replicate partitions sang nhiều brokers để fault tolerance. Leader nhận writes, followers sync từ leader.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>acks=0</strong>: fire-and-forget. Producer không đợi ack. Nhanh nhất, có thể mất data.</li>
+        <li><strong>acks=1</strong>: leader ghi xong là ACK. Nếu leader crash trước khi replicate → mất data.</li>
+        <li><strong>acks=all (-1)</strong>: đợi tất cả ISR (In-Sync Replicas) ghi xong. Chậm nhất nhưng không mất data. Dùng kèm <code>min.insync.replicas=2</code>.</li>
+      </ul></div>
+      <div class="code-block"><span class="cm">// Producer config cho durability cao</span>
+producer := kafka.NewWriter(kafka.WriterConfig{
+    Brokers:      []string{<span class="str">"kafka:9092"</span>},
+    Topic:        <span class="str">"video-events"</span>,
+    RequiredAcks: kafka.RequireAll,    <span class="cm">// acks=all</span>
+    Async:        <span class="kw">false</span>,              <span class="cm">// synchronous</span>
+    MaxAttempts:  <span class="num">3</span>,                 <span class="cm">// retry</span>
+})</div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Idempotent Producer</div>
+        <p>Retry có thể gây duplicate messages. Enable <code>enable.idempotence=true</code> → Kafka assign sequence number cho mỗi message, broker dedup tự động. Bắt buộc nếu dùng acks=all + retry.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">06</span>
+      <span class="q-text">Outbox Pattern là gì? Tại sao cần khi dùng Kafka với database?</span>
+      <span class="q-level hard">Hard</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Vấn đề: bạn cần vừa ghi DB vừa publish Kafka trong cùng 1 operation. Nếu DB thành công nhưng Kafka fail → inconsistency.</p>
+      </div>
+      <div class="code-block"><span class="cm">// BAD — không atomic</span>
+<span class="kw">func</span> <span class="fn">createOrder</span>(order Order) <span class="kw">error</span> {
+    db.<span class="fn">Insert</span>(order)               <span class="cm">// OK</span>
+    kafka.<span class="fn">Publish</span>(<span class="str">"order.created"</span>) <span class="cm">// FAIL → inconsistent!</span>
+}
+
+<span class="cm">// GOOD — Outbox Pattern</span>
+<span class="cm">// 1. Ghi order + outbox message trong CÙNG DB transaction</span>
+tx.<span class="fn">Insert</span>(order)
+tx.<span class="fn">Insert</span>(<span class="str">"outbox"</span>, {event: <span class="str">"order.created"</span>, payload: order})
+tx.<span class="fn">Commit</span>()
+
+<span class="cm">// 2. Separate process đọc outbox table → publish Kafka</span>
+<span class="cm">// Nếu publish fail → retry (outbox row vẫn còn)</span>
+<span class="cm">// Nếu publish thành công → delete hoặc mark processed</span>
+
+<span class="cm">// CDC: dùng Debezium watch binlog → auto publish Kafka</span></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Triển khai thực tế</div>
+        <p><strong>Polling publisher</strong>: cronjob đọc outbox table mỗi vài giây. Đơn giản nhưng có latency.<br><strong>CDC (Change Data Capture)</strong>: Debezium đọc PostgreSQL WAL → publish Kafka. Real-time, không polling, nhưng cần setup thêm.</p>
+      </div>
+    </div>
+  </div>
+  <div class="cat-label">RabbitMQ</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">07</span>
+      <span class="q-text">RabbitMQ là gì? Xử lý lỗi trong RabbitMQ như thế nào?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>RabbitMQ là <strong>message broker</strong> implement giao thức AMQP. Hoạt động theo mô hình <strong>Producer → Exchange → Queue → Consumer</strong>. Exchange là điểm routing — quyết định message đi vào queue nào dựa trên routing rules.</p>
+      </div>
+      <div class="code-block"><span class="cm">// 4 loại Exchange:</span>
+<span class="cm">// Direct:  route theo exact routing key</span>
+<span class="cm">// Fanout:  broadcast đến tất cả queues (ignore key)</span>
+<span class="cm">// Topic:   route theo pattern (*.error, logs.#)</span>
+<span class="cm">// Headers: route theo message headers</span>
+
+<span class="cm">// Consumer ACK flow</span>
+msg, _ := ch.<span class="fn">Consume</span>(queue, <span class="str">""</span>, <span class="kw">false</span>, ...) <span class="cm">// autoAck=false</span>
+<span class="kw">for</span> d := <span class="kw">range</span> msg {
+    err := <span class="fn">processMessage</span>(d.Body)
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        d.<span class="fn">Nack</span>(<span class="kw">false</span>, <span class="kw">true</span>)  <span class="cm">// requeue=true: đưa lại queue</span>
+        <span class="cm">// hoặc Nack(false, false) → dead letter queue</span>
+    } <span class="kw">else</span> {
+        d.<span class="fn">Ack</span>(<span class="kw">false</span>)         <span class="cm">// acknowledge: xóa khỏi queue</span>
+    }
+}</div>
+      <div class="key-points"><ul>
+        <li><strong>ACK (Acknowledge)</strong>: consumer báo đã xử lý thành công → RabbitMQ xóa message.</li>
+        <li><strong>NACK / Reject</strong>: xử lý thất bại → có thể requeue hoặc gửi vào Dead Letter Exchange (DLX).</li>
+        <li><strong>Dead Letter Queue (DLQ)</strong>: nơi chứa messages bị reject, expired, hoặc queue overflow. Dùng để debug, manual retry.</li>
+        <li><strong>Retry với exponential backoff</strong>: dùng per-message TTL + DLX → sau N giây tự động republish lại queue gốc.</li>
+        <li><strong>Persistent message</strong>: <code>DeliveryMode: 2</code> → RabbitMQ ghi xuống disk, không mất khi restart.</li>
+      </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Bẫy phổ biến</div>
+        <p><strong>Poison message</strong>: message luôn fail → liên tục requeue → loop vô hạn → consumer bị lock. Giải pháp: đếm retry count (dùng <code>x-death</code> header), sau N lần chuyển vào DLQ thay vì requeue.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">08</span>
+      <span class="q-text">Tại sao dùng RabbitMQ? Ưu điểm so với gọi API trực tiếp?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>RabbitMQ giải quyết vấn đề <strong>coupling và reliability</strong> trong communication giữa các services.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Decoupling</strong>: Producer không cần biết Consumer có đang chạy không. Gửi vào queue → xong. Consumer có thể down, restart mà không mất message.</li>
+        <li><strong>Async processing</strong>: request nặng (send email, resize image, generate report) xử lý background — user không phải đợi.</li>
+        <li><strong>Load leveling</strong>: producer spike 10,000 requests/s nhưng consumer xử lý ổn định 1,000/s — queue làm buffer, không làm chết downstream.</li>
+        <li><strong>Retry built-in</strong>: message fail tự động retry, không cần tự code retry logic ở application.</li>
+        <li><strong>Fan-out</strong>: 1 event → nhiều consumers xử lý song song (fanout exchange). Ví dụ: user đăng ký → gửi email + tạo profile + notify analytics.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 So sánh trực tiếp</div>
+        <p><strong>HTTP sync call</strong>: Service A gọi B — nếu B chậm, A bị block. Nếu B down, A lỗi. Tight coupling.<br><strong>RabbitMQ async</strong>: A gửi message, không quan tâm B. B tự xử lý khi sẵn sàng. Loose coupling, resilient hơn.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SECTION: ARCHITECTURE & SECURITY -->
+<!-- ══════════════════════════════════════════════════ -->
+<div id="sec-arch" class="section section-arch">
+  <div class="section-head">
+    <span class="section-num">04</span>
+    <h2 class="section-title">Architecture & Security</h2>
+  </div>
+
+  <div class="cat-label">API Security</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">01</span>
+      <span class="q-text">Làm thế nào để bảo mật API? Kể các lớp bảo mật một senior backend cần biết.</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>API security là multi-layer — không có một giải pháp duy nhất. Tiếp cận theo <strong>Defense in Depth</strong>: nhiều lớp bảo vệ, nếu một lớp bị qua thì còn lớp khác.</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>Authentication</strong>: xác minh identity. Dùng JWT, OAuth2, API Key. Luôn dùng HTTPS — không bao giờ gửi token qua HTTP plain.</li>
+        <li><strong>Authorization</strong>: xác minh permission. RBAC (Role-Based) hoặc ABAC (Attribute-Based). Validate ở middleware trước khi vào handler.</li>
+        <li><strong>Input Validation</strong>: validate và sanitize mọi input. Phòng SQL injection, XSS, path traversal. Dùng parameterized query — không bao giờ string concat SQL.</li>
+        <li><strong>Rate Limiting</strong>: giới hạn request per IP/user. Phòng brute force, DDoS. Dùng sliding window hoặc token bucket.</li>
+        <li><strong>CORS</strong>: chỉ allow trusted origins. Không để <code>Access-Control-Allow-Origin: *</code> cho authenticated endpoints.</li>
+        <li><strong>Sensitive data</strong>: không log password, token, PII. Mask trong response. Encrypt at rest (password bcrypt, sensitive fields AES).</li>
+        <li><strong>Security headers</strong>: <code>X-Content-Type-Options</code>, <code>X-Frame-Options</code>, <code>Strict-Transport-Security</code>.</li>
+      </ul></div>
+      <div class="code-block"><span class="cm">// Go middleware stack thực tế</span>
+router.<span class="fn">Use</span>(
+    middleware.<span class="fn">RateLimit</span>(<span class="num">100</span>, time.Minute),   <span class="cm">// 100 req/min</span>
+    middleware.<span class="fn">CORS</span>(allowedOrigins),
+    middleware.<span class="fn">SecurityHeaders</span>(),
+    middleware.<span class="fn">Authenticate</span>(jwtSecret),    <span class="cm">// verify JWT</span>
+    middleware.<span class="fn">Authorize</span>(requiredRoles...),  <span class="cm">// check permission</span>
+    middleware.<span class="fn">RequestLogger</span>(),             <span class="cm">// log (mask sensitive)</span>
+)</div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Điểm cộng — OWASP Top 10</div>
+        <p>Mention <strong>OWASP API Security Top 10</strong>: Broken Object Level Authorization (BOLA) là lỗi phổ biến nhất — user A có thể access data của user B bằng cách thay đổi ID trong request. Fix: luôn validate <code>resource.user_id == currentUser.id</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">02</span>
+      <span class="q-text">JWT hoạt động như thế nào? Tại sao refresh token có thời hạn dài hơn access token?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>JWT (JSON Web Token) là <strong>stateless token</strong> gồm 3 phần: <code>Header.Payload.Signature</code>, encode bằng Base64URL và ký bằng secret key (HMAC) hoặc private key (RSA/ES256).</p>
+      </div>
+      <div class="code-block"><span class="cm">// Structure: base64(header).base64(payload).signature</span>
+<span class="cm">// Header: {"alg":"HS256","typ":"JWT"}</span>
+<span class="cm">// Payload: {"sub":"user_123","role":"admin","exp":1706745600}</span>
+<span class="cm">// Signature: HMACSHA256(header+"."+payload, secret)</span>
+
+<span class="cm">// Verify: server tự tính lại signature → so sánh</span>
+<span class="cm">// Không cần query DB mỗi request → stateless, scalable</span>
+
+<span class="cm">// Go implementation</span>
+claims := jwt.MapClaims{
+    <span class="str">"sub"</span>: userID,
+    <span class="str">"exp"</span>: time.<span class="fn">Now</span>().<span class="fn">Add</span>(<span class="num">15</span> * time.Minute).<span class="fn">Unix</span>(), <span class="cm">// access: 15m</span>
+}
+token := jwt.<span class="fn">NewWithClaims</span>(jwt.SigningMethodHS256, claims)
+signed, _ := token.<span class="fn">SignedString</span>([]<span class="kw">byte</span>(secret))</div>
+      <div class="key-points"><ul>
+        <li><strong>Access token ngắn (15 phút)</strong>: vì JWT <strong>không thể revoke</strong> trước khi hết hạn (stateless). Nếu bị steal, attacker chỉ dùng được tối đa 15 phút.</li>
+        <li><strong>Refresh token dài (7-30 ngày)</strong>: lưu trong DB (có thể revoke bất cứ lúc nào). Chỉ dùng 1 lần để lấy access token mới. Lưu ở httpOnly cookie — JavaScript không đọc được → phòng XSS.</li>
+        <li><strong>Rotation</strong>: mỗi lần dùng refresh token → phát token mới + invalidate token cũ (refresh token rotation). Phát hiện token reuse → logout toàn bộ sessions.</li>
+      </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Bẫy JWT phổ biến</div>
+        <p><strong>alg=none attack</strong>: attacker set <code>"alg":"none"</code> → không có signature → bypass verify. Fix: luôn whitelist algorithms được phép. Không dùng <code>jwt.Parse</code> mà không validate alg.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Design Patterns — Tự tin nhất</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">03</span>
+      <span class="q-text">Repository Pattern — mô tả, implement trong Go, và lợi ích thực tế?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Định nghĩa</div>
+      <div class="answer-text">
+        <p>Repository Pattern tách biệt <strong>business logic khỏi data access logic</strong> bằng cách định nghĩa interface trừu tượng cho việc persist/retrieve domain objects. Business layer chỉ biết interface — không biết Postgres, MongoDB hay Redis tồn tại.</p>
+      </div>
+      <div class="code-block"><span class="cm">// ── STEP 1: Domain layer định nghĩa interface ──</span>
+<span class="cm">// File: internal/domain/repository/user_repository.go</span>
+<span class="kw">type</span> UserRepository <span class="kw">interface</span> {
+    <span class="fn">FindByID</span>(ctx context.Context, id string) (*entity.User, <span class="kw">error</span>)
+    <span class="fn">FindByEmail</span>(ctx context.Context, email string) (*entity.User, <span class="kw">error</span>)
+    <span class="fn">Save</span>(ctx context.Context, user *entity.User) <span class="kw">error</span>
+    <span class="fn">Delete</span>(ctx context.Context, id string) <span class="kw">error</span>
+    <span class="fn">ListByIDs</span>(ctx context.Context, ids []string) ([]*entity.User, <span class="kw">error</span>)
+}
+
+<span class="cm">// ── STEP 2: Infrastructure implement với Postgres ──</span>
+<span class="cm">// File: internal/infrastructure/postgres/user_pg_repo.go</span>
+<span class="kw">type</span> userPostgresRepo <span class="kw">struct</span> {
+    db  *sqlx.DB
+    log *zap.Logger
+}
+
+<span class="kw">func</span> NewUserPostgresRepo(db *sqlx.DB, log *zap.Logger) UserRepository {
+    <span class="kw">return</span> &amp;userPostgresRepo{db: db, log: log}
+}
+
+<span class="kw">func</span> (r *userPostgresRepo) FindByID(ctx context.Context, id string) (*entity.User, <span class="kw">error</span>) {
+    <span class="kw">var</span> row userRow
+    err := r.db.GetContext(ctx, &amp;row,
+        <span class="str">"SELECT * FROM users WHERE user_id = $1 AND deleted_at IS NULL"</span>, id)
+    <span class="kw">if</span> errors.Is(err, sql.ErrNoRows) {
+        <span class="kw">return</span> <span class="kw">nil</span>, domain.ErrUserNotFound <span class="cm">// translate DB error → domain error</span>
+    }
+    <span class="kw">return</span> row.toDomain(), err
+}
+
+<span class="cm">// ── STEP 3: Redis implement cùng interface (cache layer) ──</span>
+<span class="kw">type</span> userRedisRepo <span class="kw">struct</span> {
+    rdb      *redis.Client
+    fallback UserRepository  <span class="cm">// delegate to postgres nếu cache miss</span>
+    ttl      time.Duration
+}
+
+<span class="kw">func</span> (r *userRedisRepo) FindByID(ctx context.Context, id string) (*entity.User, <span class="kw">error</span>) {
+    cached, err := r.rdb.Get(ctx, <span class="str">"user:"</span>+id).Result()
+    <span class="kw">if</span> err == <span class="kw">nil</span> {
+        <span class="kw">return</span> unmarshal(cached), <span class="kw">nil</span> <span class="cm">// cache hit</span>
+    }
+    user, err := r.fallback.FindByID(ctx, id) <span class="cm">// cache miss → postgres</span>
+    <span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> <span class="kw">nil</span>, err }
+    r.rdb.Set(ctx, <span class="str">"user:"</span>+id, marshal(user), r.ttl)
+    <span class="kw">return</span> user, <span class="kw">nil</span>
+}
+
+<span class="cm">// ── STEP 4: Usecase inject interface — không biết gì về DB ──</span>
+<span class="kw">type</span> UserUsecase <span class="kw">struct</span> {
+    userRepo UserRepository  <span class="cm">// interface, không phải concrete type</span>
+}
+
+<span class="kw">func</span> NewUserUsecase(repo UserRepository) *UserUsecase {
+    <span class="kw">return</span> &amp;UserUsecase{userRepo: repo}
+}
+
+<span class="cm">// ── STEP 5: Wire trong main.go ──</span>
+pgRepo    := postgres.NewUserPostgresRepo(db, log)
+cachedRepo := redis.NewUserRedisRepo(rdb, pgRepo, time.Hour)
+usecase   := usecase.NewUserUsecase(cachedRepo) <span class="cm">// swap bất cứ lúc nào</span></div>
+
+      <div class="key-points"><ul>
+        <li><strong>Testability</strong>: unit test usecase với mock repository — không cần spin up Postgres.</li>
+        <li><strong>Cache decorator</strong>: Redis repo wrap Postgres repo — cùng interface, thêm caching layer mà không thay đổi usecase.</li>
+        <li><strong>Error translation</strong>: repo chuyển <code>sql.ErrNoRows</code> thành <code>domain.ErrNotFound</code> — usecase chỉ biết domain errors.</li>
+        <li><strong>Swap DB</strong>: migrate từ Postgres sang CockroachDB — chỉ cần viết impl mới, usecase không đổi 1 dòng.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Senior-level detail: tại sao translate error?</div>
+        <p>Nếu để <code>sql.ErrNoRows</code> leak lên usecase → usecase bị phụ thuộc vào <code>database/sql</code> package. Đây là vi phạm Dependency Rule. Domain errors như <code>ErrUserNotFound</code> là part of domain contract — independent của infrastructure.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">04</span>
+      <span class="q-text">Singleton Pattern — implement thread-safe trong Go. Khi nào nên dùng và không nên dùng?</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Định nghĩa</div>
+      <div class="answer-text">
+        <p>Singleton đảm bảo chỉ có <strong>một instance duy nhất</strong> của một type trong toàn bộ application lifecycle. Dùng cho: DB connection pool, config, logger — những thứ expensive to create và share được.</p>
+      </div>
+      <div class="code-block"><span class="cm">// ── Pattern 1: sync.Once — idiomatic Go ──</span>
+<span class="kw">var</span> (
+    dbInstance *sql.DB
+    dbOnce     sync.Once
+)
+
+<span class="kw">func</span> GetDB(cfg *Config) *sql.DB {
+    dbOnce.Do(<span class="kw">func</span>() {
+        db, err := sql.Open(<span class="str">"postgres"</span>, cfg.DSN)
+        <span class="kw">if</span> err != <span class="kw">nil</span> { panic(err) }
+        db.SetMaxOpenConns(cfg.MaxConns)
+        db.SetMaxIdleConns(cfg.MaxIdle)
+        db.SetConnMaxLifetime(cfg.ConnLifetime)
+        dbInstance = db
+    })
+    <span class="kw">return</span> dbInstance
+}
+<span class="cm">// sync.Once đảm bảo Do() chỉ chạy 1 lần duy nhất</span>
+<span class="cm">// Thread-safe, không cần mutex tường minh</span>
+<span class="cm">// Dù 1000 goroutines gọi GetDB() cùng lúc — safe</span>
+
+<span class="cm">// ── Pattern 2: package-level init — đơn giản hơn ──</span>
+<span class="kw">var</span> DB *sql.DB
+
+<span class="kw">func</span> Init(cfg *Config) {
+    DB, _ = sql.Open(<span class="str">"postgres"</span>, cfg.DSN)
+}
+<span class="cm">// Gọi Init() một lần trong main(), sau đó dùng DB ở khắp nơi</span>
+<span class="cm">// Đơn giản hơn sync.Once nhưng ít flexible</span>
+
+<span class="cm">// ── Pattern 3: Constructor injection — PREFERRED cho testing ──</span>
+<span class="kw">type</span> Server <span class="kw">struct</span> { db *sql.DB }
+<span class="kw">func</span> NewServer(db *sql.DB) *Server { <span class="kw">return</span> &amp;Server{db: db} }
+<span class="cm">// Trong main: db = GetDB(cfg); server = NewServer(db)</span>
+<span class="cm">// Mỗi component nhận DB qua constructor — không gọi global</span></div>
+
+      <div class="key-points"><ul>
+        <li><strong>Nên dùng Singleton cho</strong>: DB connection pool, Redis client, config loader, logger — global resource, expensive to create, stateless behavior.</li>
+        <li><strong>KHÔNG nên dùng Singleton cho</strong>: object có state thay đổi theo request (user context, request-scoped data) — gây race condition và test nightmare.</li>
+        <li><strong>Global Singleton vs Injection</strong>: trong production code Go, prefer <strong>constructor injection</strong> — pass DB vào struct thay vì gọi global <code>GetDB()</code>. Dễ test hơn (có thể pass mock), ít hidden dependency.</li>
+      </ul></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Singleton trong test gây vấn đề gì?</div>
+        <p>Global singleton bị share giữa các test cases → test không independent → order-dependent tests, flaky tests. Fix: inject dependency vào constructor thay vì dùng global. Trong test, inject mock implementation.</p>
+      </div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Câu trả lời phân biệt senior</div>
+        <p>"Mình dùng sync.Once để implement Singleton cho DB pool và Redis client, nhưng không expose global variable. Thay vào đó inject vào struct qua constructor — giữ được Singleton semantics mà vẫn testable. Pattern này còn giúp explicit về dependencies — ai đọc code thấy ngay component này cần gì."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Design Patterns — Biết thêm</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">05</span>
+      <span class="q-text">Observer / Pub-Sub và Factory Pattern — mô tả nhanh và ví dụ thực tế.</span>
+      <span class="q-level easy">Easy</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Observer / Pub-Sub</div>
+      <div class="answer-text">
+        <p>Subject notify nhiều observers khi có sự kiện. Loose coupling — subject không biết observer cụ thể.</p>
+      </div>
+      <div class="code-block"><span class="kw">type</span> EventBus <span class="kw">struct</span> {
+    handlers <span class="kw">map</span>[<span class="kw">string</span>][]<span class="kw">func</span>(Event)
+    mu       sync.RWMutex
+}
+<span class="kw">func</span> (eb *EventBus) Subscribe(topic <span class="kw">string</span>, h <span class="kw">func</span>(Event)) {
+    eb.mu.Lock(); <span class="kw">defer</span> eb.mu.Unlock()
+    eb.handlers[topic] = append(eb.handlers[topic], h)
+}
+<span class="kw">func</span> (eb *EventBus) Publish(topic <span class="kw">string</span>, e Event) {
+    eb.mu.RLock(); <span class="kw">defer</span> eb.mu.RUnlock()
+    <span class="kw">for</span> _, h := <span class="kw">range</span> eb.handlers[topic] { <span class="kw">go</span> h(e) }
+}
+<span class="cm">// user.registered → emailService, analyticsService, notifyService</span>
+bus.Subscribe(<span class="str">"user.registered"</span>, emailSvc.SendWelcome)
+bus.Subscribe(<span class="str">"user.registered"</span>, analytics.Track)
+bus.Publish(<span class="str">"user.registered"</span>, UserEvent{ID: newUserID})</div>
+
+      <div class="ans-label">Factory Pattern</div>
+      <div class="code-block"><span class="cm">// Tách logic khởi tạo, client chỉ biết interface</span>
+<span class="kw">func</span> NewStorageProvider(kind <span class="kw">string</span>, cfg Config) StorageProvider {
+    <span class="kw">switch</span> kind {
+    <span class="kw">case</span> <span class="str">"s3"</span>:    <span class="kw">return</span> NewS3Provider(cfg)
+    <span class="kw">case</span> <span class="str">"gcs"</span>:   <span class="kw">return</span> NewGCSProvider(cfg)
+    <span class="kw">default</span>:     <span class="kw">return</span> NewLocalStorage(cfg)
+    }
+}
+<span class="cm">// Dùng cho: payment gateway, storage provider, notification channel</span>
+<span class="cm">// Client: storage := NewStorageProvider(os.Getenv("STORAGE"), cfg)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SECTION: ENGINEERING PROCESS -->
+<!-- ══════════════════════════════════════════════════ -->
+<div id="sec-eng" class="section section-eng">
+  <div class="section-head">
+    <span class="section-num">05</span>
+    <h2 class="section-title">Engineering Process</h2>
+  </div>
+
+  <div class="cat-label">Workflow & Task Management</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">01</span>
+      <span class="q-text">Hãy kể quy trình từ khi nhận task đến khi hoàn thành. Senior làm khác gì junior?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời — Senior mindset</div>
+      <div class="answer-text">
+        <p>Junior nhận task → code ngay. Senior nhận task → <strong>hiểu sâu trước khi code</strong>. Quy trình:</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>1. Clarify requirements</strong>: đọc kỹ task, hỏi những điều chưa rõ trước khi bắt đầu. "Edge cases là gì? Performance expectation? Scope có include X không?" — hỏi sớm tốt hơn deliver sai.</li>
+        <li><strong>2. Technical design</strong>: với task phức tạp, viết mini-design doc hoặc flow trước. Identify dependencies, risks, cần break xuống sub-tasks không?</li>
+        <li><strong>3. Estimate và communicate</strong>: estimate thời gian, communicate nếu có blocker. Update status proactively, không đợi bị hỏi.</li>
+        <li><strong>4. Implement theo TDD hoặc write-test-together</strong>: code + unit test. Không submit PR mà không có test.</li>
+        <li><strong>5. Self-review trước khi tạo PR</strong>: đọc lại diff của mình — "nếu mình là reviewer, mình sẽ hỏi gì?" Giải quyết trước.</li>
+        <li><strong>6. PR với description rõ ràng</strong>: mô tả what + why + how. Link ticket, screenshot nếu có UI change, mention breaking changes.</li>
+        <li><strong>7. Address review comments</strong>: respond từng comment, không ignore. Nếu không đồng ý, giải thích reason — không chỉ "done".</li>
+        <li><strong>8. Test trên staging</strong>: verify sau khi merge, không chỉ tin vào CI.</li>
+      </ul></div>
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Điều senior làm mà junior không nghĩ đến</div>
+        <p>Nghĩ đến <strong>downstream impact</strong>: thay đổi này ảnh hưởng API contract không? Breaking change cho client? Database migration có rollback plan không? Monitor sau khi deploy — không chỉ deploy xong rồi thôi.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Code Review</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">02</span>
+      <span class="q-text">Em đã từng review code cho team chưa? Quy trình review code như thế nào?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Review code không chỉ là tìm bug — đó là <strong>knowledge sharing, mentoring, và maintain code quality</strong>. Quy trình mình áp dụng:</p>
+      </div>
+      <div class="key-points"><ul>
+        <li><strong>1. Hiểu context trước</strong>: đọc ticket/description của PR trước. Hiểu "why" mới review "how" được. Đừng nhảy thẳng vào diff.</li>
+        <li><strong>2. Correctness trước tiên</strong>: logic có đúng không? Edge cases được handle chưa? Error handling đủ không? Race condition không?</li>
+        <li><strong>3. Security</strong>: input validation, auth check, SQL injection, sensitive data bị log không?</li>
+        <li><strong>4. Performance</strong>: N+1 query? Unnecessary DB calls? Missing index cho query mới?</li>
+        <li><strong>5. Readability & Maintainability</strong>: tên variable/function có rõ nghĩa không? Function quá dài? Comment có cần không?</li>
+        <li><strong>6. Test coverage</strong>: có unit test không? Test cover happy path và edge cases chưa?</li>
+      </ul></div>
+      <div class="code-block"><span class="cm">// Comment review tốt: explain reason + suggest fix</span>
+
+<span class="cm">// ❌ Bad comment</span>
+<span class="cm">// "This is wrong"</span>
+
+<span class="cm">// ✅ Good comment  </span>
+<span class="cm">// "This could cause N+1 query when users list is large.</span>
+<span class="cm">//  Consider fetching all orders in one query with IN clause:</span>
+<span class="cm">//  SELECT * FROM orders WHERE user_id IN (...userIDs)"</span>
+
+<span class="cm">// Phân loại comment</span>
+<span class="cm">// [blocking]:  phải fix trước khi merge</span>
+<span class="cm">// [nit]:       nhỏ nhặt, có thể fix hoặc không</span>
+<span class="cm">// [question]:  mình không hiểu, cần giải thích</span>
+<span class="cm">// [suggestion]: idea, không bắt buộc</span></div>
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Tránh khi review</div>
+        <p>Tránh <strong>nitpicking style</strong> khi đã có linter/formatter — để tool làm việc đó. Tránh comment mang tính cá nhân ("bạn sai rồi") — review code, không review người. Tránh approve PR mà không thực sự đọc vì "trust teammate".</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-label">Testing</div>
+
+  <div class="q-card" onclick="toggleCard(this)">
+    <div class="q-header">
+      <span class="q-num">03</span>
+      <span class="q-text">Em có dùng Unit Test không? Define test như thế nào? Mock dependency ra sao trong Go?</span>
+      <span class="q-level med">Medium</span>
+      <span class="q-toggle">+</span>
+    </div>
+    <div class="q-body">
+      <div class="ans-label">Trả lời</div>
+      <div class="answer-text">
+        <p>Có. Unit test verify một unit (function/method) hoạt động đúng <strong>độc lập với dependencies</strong>. Go có built-in testing package, không cần framework bên ngoài.</p>
+      </div>
+      <div class="code-block"><span class="cm">// user_usecase_test.go</span>
+<span class="kw">package</span> usecase_test
+
+<span class="cm">// 1. Định nghĩa mock implement interface</span>
+<span class="kw">type</span> mockUserRepo <span class="kw">struct</span> {
+    findByIDFunc <span class="kw">func</span>(ctx context.Context, id <span class="kw">string</span>) (*User, <span class="kw">error</span>)
+}
+<span class="kw">func</span> (m *mockUserRepo) <span class="fn">FindByID</span>(ctx context.Context, id <span class="kw">string</span>) (*User, <span class="kw">error</span>) {
+    <span class="kw">return</span> m.<span class="fn">findByIDFunc</span>(ctx, id)
+}
+
+<span class="cm">// 2. Table-driven tests — idiomatic Go</span>
+<span class="kw">func</span> <span class="fn">TestGetProfile</span>(t *testing.T) {
+    tests := []<span class="kw">struct</span>{
+        name    <span class="kw">string</span>
+        userID  <span class="kw">string</span>
+        mockFn  <span class="kw">func</span>() (*User, <span class="kw">error</span>)
+        wantErr <span class="kw">bool</span>
+    }{
+        {
+            name:   <span class="str">"success"</span>,
+            userID: <span class="str">"u1"</span>,
+            mockFn: <span class="kw">func</span>() (*User, <span class="kw">error</span>) { <span class="kw">return</span> &amp;User{ID: <span class="str">"u1"</span>}, <span class="kw">nil</span> },
+            wantErr: <span class="kw">false</span>,
+        },
+        {
+            name:   <span class="str">"not found"</span>,
+            userID: <span class="str">"u999"</span>,
+            mockFn: <span class="kw">func</span>() (*User, <span class="kw">error</span>) { <span class="kw">return</span> <span class="kw">nil</span>, ErrNotFound },
+            wantErr: <span class="kw">true</span>,
+        },
+    }
+
+    <span class="kw">for</span> _, tt := <span class="kw">range</span> tests {
+        t.<span class="fn">Run</span>(tt.name, <span class="kw">func</span>(t *testing.T) {
+            repo := &amp;mockUserRepo{findByIDFunc: <span class="kw">func</span>(_ context.Context, _ <span class="kw">string</span>) (*User, <span class="kw">error</span>) {
+                <span class="kw">return</span> tt.<span class="fn">mockFn</span>()
+            }}
+            uc := <span class="fn">NewUserUsecase</span>(repo)
+            _, err := uc.<span class="fn">GetProfile</span>(context.<span class="fn">Background</span>(), tt.userID)
+            <span class="kw">if</span> (err != <span class="kw">nil</span>) != tt.wantErr {
+                t.<span class="fn">Errorf</span>(<span class="str">"got err=%v, wantErr=%v"</span>, err, tt.wantErr)
+            }
+        })
+    }
+}</div>
+      <div class="key-points"><ul>
+        <li><strong>Table-driven tests</strong>: idiomatic Go — dễ thêm test case, dễ đọc.</li>
+        <li><strong>Mock bằng interface</strong>: vì Go dùng implicit interface, tạo mock đơn giản. Hoặc dùng <strong>testify/mock</strong>, <strong>mockgen</strong> để generate mock tự động.</li>
+        <li><strong>Test coverage</strong>: <code>go test -cover ./...</code>. Mục tiêu reasonable: 70-80% cho business logic. Không cần 100%.</li>
+        <li><strong>Integration test</strong>: dùng <code>testcontainers-go</code> để spin up real Postgres trong Docker cho integration test.</li>
+      </ul></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end content-area -->
+
+<script>
+function switchTab(tab, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggleCard(card) {
+  card.classList.toggle('open');
+}
+</script>
+</body>
+</html>
