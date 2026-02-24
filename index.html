@@ -367,6 +367,10 @@ body::before {
 .key-points ul li:only-child { grid-column: 1 / -1; border-right: none; }
 .key-points ul li:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: none; }
 
+.key-points.col-1 ul { grid-template-columns: 1fr; }
+.key-points.col-1 li { border-right: none !important; border-bottom: 1px solid var(--bg3) !important; }
+.key-points.col-1 li:last-child { border-bottom: none !important; }
+
 /* ─── BOXES ─── */
 .trap-box {
   background: rgba(174,32,18,0.04);
@@ -1219,7 +1223,7 @@ orders(order_id PK, customer_id FK, amount, created_at)
       <div class="answer-text">
         <p>Denormalize khi <strong>read performance quan trọng hơn write consistency</strong> — chấp nhận data redundancy để tránh JOIN phức tạp.</p>
       </div>
-      <div class="key-points"><ul>
+      <div class="key-points col-1"><ul>
         <li><strong>Analytics / Reporting</strong>: ClickHouse lưu <code>watch_sessions</code> với đầy đủ <code>user_id</code>, <code>video_id</code> trực tiếp — không JOIN runtime khi query aggregate.</li>
         <li><strong>Read-heavy endpoints</strong>: denormalize <code>author_name</code> vào bảng <code>posts</code> nếu 99% query là read, author hiếm khi đổi tên.</li>
         <li><strong>Đánh đổi</strong>: update phức tạp hơn (phải update nhiều chỗ), data có thể stale nếu không sync kịp.</li>
