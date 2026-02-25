@@ -776,32 +776,133 @@ ch := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw"
       <span class="q-toggle">+</span>
     </div>
     <div class="q-body">
-      <div class="ans-label">Trả lời</div>
-      <div class="answer-text">
-        <p><strong>Race condition</strong>: xảy ra khi 2+ goroutines đọc/ghi cùng một biến mà không có synchronization. Kết quả không deterministic.</p>
-      </div>
-      <div class="key-points"><ul>
-        <li><strong>Mutex</strong>: Lock exclusive — chỉ 1 goroutine vào critical section tại một thời điểm (đọc hoặc ghi).</li>
-        <li><strong>RWMutex</strong>: Nhiều goroutines có thể <strong>RLock</strong> (read) đồng thời, nhưng <strong>Lock</strong> (write) thì exclusive. Tốt khi read nhiều, write ít.</li>
-      </ul></div>
-      <div class="code-block"><div class="code-block-inner"><span class="kw">var</span> mu sync.RWMutex
-<span class="kw">var</span> cache = <span class="fn">make</span>(<span class="kw">map</span>[<span class="kw">string</span>]<span class="kw">string</span>)
 
-<span class="cm">// Nhiều goroutine read cùng lúc OK</span>
-<span class="kw">func</span> <span class="fn">Get</span>(key <span class="kw">string</span>) <span class="kw">string</span> {
-    mu.<span class="fn">RLock</span>(); <span class="kw">defer</span> mu.<span class="fn">RUnlock</span>()
-    <span class="kw">return</span> cache[key]
+      <div class="ans-label">1 — Race Condition là gì?</div>
+      <div class="answer-text">
+        <p><strong>Race condition</strong> xảy ra khi 2+ goroutines <em>đồng thời</em> truy cập vào cùng một vùng nhớ, trong đó ít nhất 1 goroutine đang <strong>ghi</strong> — mà không có synchronization. Kết quả phụ thuộc vào thứ tự thực thi, hoàn toàn không deterministic.</p>
+      </div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ❌ RACE CONDITION — counter bị ghi đồng thời</span>
+<span class="kw">var</span> counter <span class="kw">int</span>
+
+<span class="kw">for</span> i := <span class="num">0</span>; i &lt; <span class="num">1000</span>; i++ {
+    <span class="kw">go func</span>() {
+        counter++ <span class="cm">// KHÔNG ATOMIC: read → modify → write = 3 bước riêng biệt</span>
+    }()            <span class="cm">// 2 goroutines đọc cùng value, cộng 1, ghi đè nhau</span>
+}
+<span class="cm">// Kết quả: counter có thể là 847, 923, 1000... mỗi lần chạy khác nhau</span>
+
+<span class="cm">// Vấn đề ở cấp CPU instruction:</span>
+<span class="cm">// Goroutine A: LOAD counter=5    Goroutine B: LOAD counter=5</span>
+<span class="cm">// Goroutine A: ADD  → 6          Goroutine B: ADD  → 6</span>
+<span class="cm">// Goroutine A: STORE counter=6   Goroutine B: STORE counter=6</span>
+<span class="cm">// Kết quả: 6 thay vì 7 — một lần increment bị mất!</span></div></div>
+
+      <div class="ans-label">2 — Mutex: Khoá độc quyền</div>
+      <div class="answer-text">
+        <p><code>sync.Mutex</code> đảm bảo chỉ <strong>1 goroutine</strong> được vào critical section tại một thời điểm — bất kể đọc hay ghi. Goroutine khác gọi <code>Lock()</code> sẽ bị <strong>block</strong> cho đến khi <code>Unlock()</code> được gọi.</p>
+      </div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// ✅ Fix bằng Mutex</span>
+<span class="kw">type</span> SafeCounter <span class="kw">struct</span> {
+    mu    sync.Mutex
+    value <span class="kw">int</span>
 }
 
-<span class="cm">// Write phải exclusive</span>
-<span class="kw">func</span> <span class="fn">Set</span>(key, val <span class="kw">string</span>) {
-    mu.<span class="fn">Lock</span>(); <span class="kw">defer</span> mu.<span class="fn">Unlock</span>()
-    cache[key] = val
-}</div></div>
-      <div class="tip-box">
-        <div class="tip-box-title">💡 Bonus</div>
-        <p>Mention <strong>go run -race</strong> để detect race condition. Interviewer sẽ rất ấn tượng nếu bạn biết tool này.</p>
+<span class="kw">func</span> (c *SafeCounter) <span class="fn">Inc</span>() {
+    c.mu.<span class="fn">Lock</span>()         <span class="cm">// goroutine khác sẽ block ở đây</span>
+    <span class="kw">defer</span> c.mu.<span class="fn">Unlock</span>() <span class="cm">// LUÔN dùng defer — đảm bảo unlock dù panic</span>
+    c.value++
+}
+
+<span class="kw">func</span> (c *SafeCounter) <span class="fn">Get</span>() <span class="kw">int</span> {
+    c.mu.<span class="fn">Lock</span>()         <span class="cm">// Mutex: read cũng phải lock!</span>
+    <span class="kw">defer</span> c.mu.<span class="fn">Unlock</span>()
+    <span class="kw">return</span> c.value
+}
+
+<span class="cm">// Mutex hoạt động như "token":</span>
+<span class="cm">// Goroutine A: Lock() → lấy token → thực thi → Unlock() → trả token</span>
+<span class="cm">// Goroutine B: Lock() → không có token → BLOCK → đợi A trả</span>
+<span class="cm">// Goroutine C: Lock() → không có token → BLOCK → đợi theo queue</span></div></div>
+
+      <div class="ans-label">3 — RWMutex: Tối ưu cho read-heavy</div>
+      <div class="answer-text">
+        <p><code>sync.RWMutex</code> cho phép <strong>nhiều goroutines đọc đồng thời</strong>, nhưng khi có goroutine ghi thì tất cả phải chờ. Phù hợp khi read &gt;&gt; write (cache, config, lookup table).</p>
       </div>
+      <div class="code-block"><div class="code-block-inner"><span class="cm">// RWMutex — 2 loại lock:</span>
+<span class="cm">// RLock()  / RUnlock() — shared read lock  (nhiều goroutine cùng hold)</span>
+<span class="cm">// Lock()   / Unlock()  — exclusive write lock (chỉ 1, block tất cả reader)</span>
+
+<span class="kw">type</span> Cache <span class="kw">struct</span> {
+    mu    sync.RWMutex
+    store <span class="kw">map</span>[<span class="kw">string</span>]<span class="kw">string</span>
+}
+
+<span class="kw">func</span> (c *Cache) <span class="fn">Get</span>(key <span class="kw">string</span>) (<span class="kw">string</span>, <span class="kw">bool</span>) {
+    c.mu.<span class="fn">RLock</span>()         <span class="cm">// shared — 1000 goroutines có thể RLock cùng lúc</span>
+    <span class="kw">defer</span> c.mu.<span class="fn">RUnlock</span>()
+    v, ok := c.store[key]
+    <span class="kw">return</span> v, ok
+}
+
+<span class="kw">func</span> (c *Cache) <span class="fn">Set</span>(key, val <span class="kw">string</span>) {
+    c.mu.<span class="fn">Lock</span>()          <span class="cm">// exclusive — block TẤT CẢ readers và writers</span>
+    <span class="kw">defer</span> c.mu.<span class="fn">Unlock</span>()
+    c.store[key] = val
+}
+
+<span class="cm">// So sánh throughput (read-heavy: 99% read, 1% write):</span>
+<span class="cm">// Mutex:   mỗi Get() đều block nhau     → throughput thấp</span>
+<span class="cm">// RWMutex: 1000 Get() chạy song song    → throughput cao hơn ~N lần</span>
+<span class="cm">//          chỉ Set() mới block everyone</span></div></div>
+
+      <div class="ans-label">4 — Khi nào dùng gì?</div>
+      <div class="key-points"><ul>
+        <li><strong>Mutex</strong>: khi write thường xuyên (≥ 30–40%), hoặc critical section rất ngắn. Overhead nhỏ hơn RWMutex.</li>
+        <li><strong>RWMutex</strong>: khi read chiếm đa số (cache, config reload, in-memory lookup table). Read throughput tăng tuyến tính theo số CPU.</li>
+        <li><strong>sync.Map</strong>: built-in concurrent map, tối ưu cho <em>write-once, read-many</em> hoặc keys không overlap giữa goroutines. Không cần tự lock.</li>
+        <li><strong>atomic package</strong>: cho counter, flag đơn giản (<code>atomic.AddInt64</code>, <code>atomic.CompareAndSwap</code>). Nhanh nhất — không cần lock, dùng CPU instruction.</li>
+        <li><strong>Channel</strong>: khi muốn truyền <em>ownership</em> của data thay vì share — idiom "don't communicate by sharing memory, share memory by communicating".</li>
+        <li><strong>Không cần lock</strong>: data chỉ đọc sau khi khởi tạo (immutable), hoặc mỗi goroutine có copy riêng (goroutine-local state).</li>
+      </ul></div>
+
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Deadlock — bẫy phổ biến nhất</div>
+        <p><strong>Deadlock</strong>: goroutine A giữ lock 1, chờ lock 2. Goroutine B giữ lock 2, chờ lock 1 → cả hai block nhau mãi mãi. Go runtime sẽ panic: <code>all goroutines are asleep - deadlock!</code></p>
+        <div class="code-block" style="margin-top:10px"><div class="code-block-inner"><span class="cm">// ❌ Deadlock</span>
+<span class="kw">func</span> <span class="fn">transfer</span>(from, to *Account, amount <span class="kw">int</span>) {
+    from.mu.<span class="fn">Lock</span>()   <span class="cm">// A lock account1, B lock account2</span>
+    to.mu.<span class="fn">Lock</span>()     <span class="cm">// A chờ account2, B chờ account1 → DEADLOCK</span>
+    from.balance -= amount
+    to.balance   += amount
+    from.mu.<span class="fn">Unlock</span>()
+    to.mu.<span class="fn">Unlock</span>()
+}
+
+<span class="cm">// ✅ Fix: luôn lock theo thứ tự cố định (VD: ID nhỏ hơn trước)</span>
+<span class="kw">func</span> <span class="fn">transfer</span>(from, to *Account, amount <span class="kw">int</span>) {
+    first, second := from, to
+    <span class="kw">if</span> from.id &gt; to.id { first, second = to, from }
+    first.mu.<span class="fn">Lock</span>()
+    second.mu.<span class="fn">Lock</span>()
+    <span class="kw">defer</span> second.mu.<span class="fn">Unlock</span>()
+    <span class="kw">defer</span> first.mu.<span class="fn">Unlock</span>()
+    from.balance -= amount
+    to.balance   += amount
+}</div></div>
+      </div>
+
+      <div class="trap-box">
+        <div class="trap-box-title">⚠ Các lỗi thường gặp với Mutex</div>
+        <p><strong>1. Copy mutex</strong>: <code>mu sync.Mutex</code> trong struct — nếu copy struct thì mutex state cũng bị copy → không hoạt động đúng. Luôn dùng <strong>pointer receiver</strong> hoặc embed pointer <code>*sync.Mutex</code>.<br><br>
+        <strong>2. Lock lồng nhau (recursive lock)</strong>: Go mutex <em>không</em> re-entrant. Goroutine đang hold lock mà gọi <code>Lock()</code> lần nữa → deadlock ngay lập tức.<br><br>
+        <strong>3. Quên Unlock</strong>: không dùng <code>defer</code>, bị <code>return</code> sớm → lock không bao giờ được release → tất cả goroutines khác block mãi mãi.</p>
+      </div>
+
+      <div class="tip-box">
+        <div class="tip-box-title">💡 Công cụ detect race condition</div>
+        <p>Dùng <strong><code>go run -race main.go</code></strong> hoặc <strong><code>go test -race ./...</code></strong> — Go race detector sẽ report chính xác file, dòng, và goroutine nào đang race. Luôn chạy trong CI. Overhead ~2–20x nhưng cực kỳ chính xác — không có false positive.</p>
+      </div>
+
     </div>
   </div>
 
